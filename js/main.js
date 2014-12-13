@@ -2,15 +2,15 @@ $(document).ready(function() {
     init();
 });
 
-
+var board;
 
 function init() {
 
-    var board = new Board();
+    board = new Board();
 
     board.addPlayer( new Player('Bob') );
     board.addPlayer( new Player('Alice') );
 
-    board.start();
+    board.playerTurn();
 
 }

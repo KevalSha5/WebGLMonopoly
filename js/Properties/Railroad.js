@@ -1,6 +1,7 @@
-Railroad.prototype = new GenericProperty();
+Street.prototype = new GenericProperty();
 
-Railroad.prototype.constructor = Railroad;
-function Railroad (name) {
+Street.prototype.constructor = Street;
+function Street (name, cost) {
 	this.name = name;
+	this.cost = cost;
 }
