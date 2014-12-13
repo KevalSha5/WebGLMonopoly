@@ -2,26 +2,17 @@ function Board() {
     this.players = [];
     this.landableAreas = [];
 
-    var justVisitingJailLandFunc = function () {
-        console.log("no worries, you're just visiting jail :)");
-    }
+    this.landableAreas.push( new Street("Northshire Abbey") );
+    this.landableAreas.push( new Street("Goldshire") );
 
-    var justVisitingJail = new GeneralLandingArea("Just visiting");
-    justVisitingJail.setLandAction(justVisitingJailLandFunc);
+    this.landableAreas.push( new Railroad("Deeprun Tram") );
 
-    var freeParkingFunc = function () {
-        console.log("free parking! :D");
-    }
+    this.landableAreas.push( new Street("Deathknell") );
+    this.landableAreas.push( new Street("Brill") );
+    this.landableAreas.push( new Street("The Speculcher") );
 
-    var freeParking = new GeneralLandingArea("Free Parking");
-    freeParking.setLandAction(freeParkingFunc);
+    this.landableAreas.push( new Utility("Lumber Mill") );
 
-    this.landableAreas.push( new Property("Northshire Abbey", 100) );
-    this.landableAreas.push( new Property("Goldshire", 150) );
-    this.landableAreas.push( new Property("Lakeshire", 200) );
-    this.landableAreas.push( new Property("Moonbrook", 250) );
-    this.landableAreas.push( justVisitingJail );
-    this.landableAreas.push( freeParking );
 }
 
 Board.prototype.addPlayer = function (player) {
@@ -37,9 +28,10 @@ Board.prototype.start = function () {
     var moveAmount = diceRoll1 + diceRoll2;
 
     var currentPlayer = this.players[0];
-    var newPos = (currentPlayer.pos + diceRoll1 + diceRoll2) % 5;
+    var newPos = (currentPlayer.pos + diceRoll1 + diceRoll2) % this.landableAreas.length;
     currentPlayer.pos = newPos;
     this.landableAreas[newPos].land( currentPlayer );
+
 }
 
 Board.prototype.getLandableAreaCount = function () {
