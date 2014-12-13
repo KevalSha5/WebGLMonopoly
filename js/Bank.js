@@ -12,3 +12,15 @@ Bank.sell = function (property, buyer) {
 	}
 }
 
+Bank.handleTransaction = function (reciever, payee, amount) {
+
+	console.log("TRANSACTION", payee.name, "pays", reciever.name, amount )
+
+	if (payee.money >= amount) {
+		payee.money -= amount;
+		reciever.money += amount;
+	} else {
+		alert("buyer payee does not have enough money");
+	}
+}
+

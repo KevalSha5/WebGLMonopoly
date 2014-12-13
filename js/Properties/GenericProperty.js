@@ -1,11 +1,14 @@
 function GenericProperty (name) {
 	this.name = name;
+	this.owner = null;
 }
 
 GenericProperty.prototype.land = function (player) {
 	console.log(player.name, 'landed on', this.name)
 
-	if (this.owner) {
+	//if owner lands . . . . do what?
+
+	if (this.owner != null) {
 
 		this.payRent(player);
 
@@ -26,6 +29,6 @@ GenericProperty.prototype.land = function (player) {
 
 }
 
-GenericProperty.payRent = function () {
+GenericProperty.prototype.payRent = function () {
 	console.log("GENERIC PAY RENT");
 }

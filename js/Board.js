@@ -3,16 +3,18 @@ function Board() {
     this.currentPlayerIndex = 0;
     this.landableAreas = [];
 
-    this.landableAreas.push( new Street("Northshire Abbey", 60) );
-    this.landableAreas.push( new Street("Goldshire", 60) );
+    var railroadRent = [25, 50, 100, 200];
 
-    this.landableAreas.push( new Railroad("Deeprun Tram", 200) );
+    this.landableAreas.push( new Street("Northshire Abbey", 60, 2) );
+    // this.landableAreas.push( new Street("Goldshire", 60, 4) );
 
-    this.landableAreas.push( new Street("Deathknell", 100) );
-    this.landableAreas.push( new Street("Brill", 100) );
-    this.landableAreas.push( new Street("The Speculcher", 120) );
+    this.landableAreas.push( new Railroad("Deeprun Tram", 200, railroadRent) );
 
-    this.landableAreas.push( new Utility("Lumber Mill", 150) );
+    // this.landableAreas.push( new Street("Deathknell", 100, 6) );
+    // this.landableAreas.push( new Street("Brill", 100, 6) );
+    // this.landableAreas.push( new Street("The Speculcher", 120, 8) );
+
+    // this.landableAreas.push( new Utility("Lumber Mill", 150) );
 
 }
 
@@ -30,9 +32,14 @@ Board.prototype.playerTurn = function () {
 
     this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
     var currentPlayer = this.players[ this.currentPlayerIndex ];
+
     var newPos = (currentPlayer.pos + diceRoll1 + diceRoll2) % this.landableAreas.length;
     currentPlayer.pos = newPos;
     this.landableAreas[newPos].land( currentPlayer );
+
+    console.log(this.players)
+    console.log("\n")
+
 }
 
 Board.prototype.getLandableAreaCount = function () {
