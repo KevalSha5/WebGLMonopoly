@@ -1,3 +1,4 @@
+GenericProperty.prototype = new GenericLandableArea();
 function GenericProperty (name) {
 	this.name = name;
 	this.owner = null;
@@ -6,7 +7,10 @@ function GenericProperty (name) {
 GenericProperty.prototype.land = function (player) {
 	console.log(player.name, 'landed on', this.name)
 
-	//if owner lands . . . . do what?
+	if (player == this.owner) {
+		console.log("ownder owns property....moving on");
+		return;
+	}
 
 	if (this.owner != null) {
 
@@ -24,7 +28,6 @@ GenericProperty.prototype.land = function (player) {
 			alert("auction stub");
 
 		}
-
 	}
 
 }
