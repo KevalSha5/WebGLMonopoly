@@ -1,0 +1,8 @@
+<board>
+	<color-set color="purple">		
+		<property
+			name="Northshire Inn"
+			cost="100"
+		/>
+	</color-set>
+</board>
