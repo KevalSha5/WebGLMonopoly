@@ -23,6 +23,8 @@ function init() {
     var landableAreasJson = xmlToJson( theme );
 
     console.log(landableAreasJson);
+    for (var i = 0; i < landableAreasJson.board.landableArea.length; i++)
+        console.log(new window[landableAreasJson.board.landableArea[i].type]())   
 
     startGameView();
 

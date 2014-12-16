@@ -6,15 +6,13 @@ function xmlToJson(xml) {
 	if (xml.nodeType == 1) { // element
 		// do attributes
 		if (xml.attributes.length > 0) {
-		obj["@attributes"] = {};
+		obj = {};
 			for (var j = 0; j < xml.attributes.length; j++) {
 				var attribute = xml.attributes.item(j);
-				obj["@attributes"][attribute.nodeName] = attribute.value;
+				obj[attribute.nodeName] = attribute.value;
 			}
 		}
-	} else if (xml.nodeType == 3) { // text
-		obj = xml.nodeValue;
-	}
+	} 
 
 	// do children
 	if (xml.hasChildNodes()) {
