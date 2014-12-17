@@ -1,11 +1,12 @@
-<board>
+var boardTheme = {
+	
+	info: null;
 
+	landableAreas: [
+		{
+			type: "Street";
+			name: ""
+		}
+	];
 
-
-
-	<landableArea type="GenericLandableArea" name="Go" landFunc="goLand" />
-	<landableArea type="Street" color="purple" name="Northshire" cost="60" rent="1, 2, 3, 4, 5" />
-	<landableArea type="GenericLandableArea" name="Community Chest" landFunc="communityChestLand" />
-	<landableArea type="Street" color="purple" name="Goldshire" cost="60" rent="1, 2, 3, 4, 5" />
-	<landableArea type="GenericLandableArea" name="Income Tax" landFunc="incomeTaxLand" />
-</board>
+}
