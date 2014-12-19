@@ -25,12 +25,47 @@
         <script src="js/main.js"></script>
 
         <!-- theme -->
-        <script src="themes/warcraft/theme.js"></script>        
+        <script src="themes/warcraft/theme.js"></script>   
+
+        <style>
+            * {
+                margin:  0;
+                padding: 0;
+            }
+
+            #gameView {
+                width: 90%;
+                height: 90%;
+            }
+
+            #tooltip {
+                margin:  0;
+                padding: 5;
+                z-index: 1;
+                position: fixed;                
+                color: red;
+            }
+
+            .street {
+                border: 5 solid black;
+                background-color: white;
+                width:   175;
+                height:  200;
+            }
+
+            .street p {
+                padding: 5;
+                color: black;
+            }
+            
+        </style>
+
     </head>
 
     <body>
-        <button onClick="board.playerTurn()"> Player Turn </button>
+        <div id="tooltip">testing the tooltip</div>
         <div id="gameView"></div>
+        <button onClick="board.playerTurn()"> Player Turn </button>
     </body>
 
 

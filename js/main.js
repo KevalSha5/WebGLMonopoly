@@ -11,7 +11,7 @@ function init() {
     addLandableAreas();
     addPlayers();
 
-    console.log(boardTheme.landableAreas.length)
+    // console.log(boardTheme.landableAreas.length)
 
     startGameView();
 

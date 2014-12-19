@@ -18,7 +18,7 @@ GenericProperty.prototype.land = function (player) {
 
 	} else {
 
-		var buyMsg = player.name + "would you like to buy " + this.name + "for " + this.cost + "?"
+		var buyMsg = player.name + "would you like to buy " + this.name + " for " + this.cost + "?"
 		if ( confirm(buyMsg) ){
 
 			Bank.sell(this, player);
