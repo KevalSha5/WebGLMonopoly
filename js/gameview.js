@@ -312,7 +312,7 @@ function update () {
         player.outlineMesh.geometry.dispose(); 
         player.outlineMesh.geometry = blankGeometry.clone();
 
-        //hide the tooltip
+        //hide the tooltip //TODO - MOVE OUTSIDE OF IF STATEMENT ??
         $("#tooltip").hide();
         $("#tooltip").html("");
         $("#tooltip").removeClass();
@@ -341,11 +341,16 @@ function update () {
 }
 
 function fillTooltipLandableArea (landableArea) {
-    // if (landableArea instanceof Street) {
-        $("#tooltip").html("<p>" + landableArea.name + "</p>");
-        $("#tooltip").addClass("street");
 
-    // }
+    if (landableArea instanceof Street) {
+        $("#tooltip").html("<p>" + landableArea.name + "</p>");
+        $("#tooltip").addClass("Street");
+
+    } else if (landableArea instanceof Railroad) {
+        $("#tooltip").html("<p>" + landableArea.name + "</p>");
+        $("#tooltip").addClass("Railroad");
+    }
+
 }
 function startGameView () {
     initGameView();
