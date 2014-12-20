@@ -11,13 +11,14 @@ var tooltip;
 var mouseCoord = {};
 var blankGeometry = new THREE.Geometry();
 var selectionChanged;
+var SCREEN_WIDTH, SCREEN_HEIGHT;
 
 function initGameView () {
     scene = new THREE.Scene();
     boardDim = 1000 * scale;
 
-    var SCREEN_WIDTH = window.innerWidth;
-    var SCREEN_HEIGHT = window.innerHeight;
+    SCREEN_WIDTH = window.innerWidth;
+    SCREEN_HEIGHT = window.innerHeight;
 
     var VIEW_ANGLE = 60;
     var ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT;
@@ -56,6 +57,7 @@ function initGameView () {
     setupBoard();
     console.log(board.landableAreas)
     window.addEventListener( 'mousemove', onMouseMove, false );
+    window.addEventListener( 'mousedown', onMouseDown, false );
 }
 
 function setupBoard () {
@@ -272,6 +274,10 @@ function onMouseMove( e ) {
     update();
 }
 
+function onMouseDown( e ) {
+    player.selectedObject;    
+}
+
 function animate () {
     requestAnimationFrame( animate );
     render();
@@ -314,8 +320,6 @@ function update () {
 
         //hide the tooltip //TODO - MOVE OUTSIDE OF IF STATEMENT ??
         $("#tooltip").hide();
-        $("#tooltip").html("");
-        $("#tooltip").removeClass();
 
 
     //if selection has changed  
@@ -333,7 +337,7 @@ function update () {
         } 
         
         //show the tooltip
-        $("#tooltip").offset( { left: mouseCoord.x + 15 ,top: mouseCoord.y + 15 } );
+        $("#tooltip").offset( { left: mouseCoord.x + 20 , top:  mouseCoord.y - 200 - 20 } );
         $("#tooltip").show();
     }
 
@@ -342,6 +346,10 @@ function update () {
 
 function fillTooltipLandableArea (landableArea) {
 
+    //clear the tooltip
+    $("#tooltip").html("");
+    $("#tooltip").removeClass();    
+
     if (landableArea instanceof Street) {
         $("#tooltip").html("<p>" + landableArea.name + "</p>");
         $("#tooltip").addClass("Street");
@@ -349,7 +357,15 @@ function fillTooltipLandableArea (landableArea) {
     } else if (landableArea instanceof Railroad) {
         $("#tooltip").html("<p>" + landableArea.name + "</p>");
         $("#tooltip").addClass("Railroad");
-    }
+
+    } else if (landableArea instanceof Utility) {
+        $("#tooltip").html("<p>" + landableArea.name + "</p>");
+        $("#tooltip").addClass("Utility");
+
+    } else if (landableArea instanceof GenericLandableArea) {
+        $("#tooltip").html("<p>" + landableArea.name + "</p>");
+        $("#tooltip").addClass("GenericLandableArea"); //probably not proper to call this, "generalland..."
+    } 
 
 }
 function startGameView () {
