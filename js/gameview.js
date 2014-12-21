@@ -20,21 +20,23 @@ function initGameView () {
     SCREEN_WIDTH = window.innerWidth;
     SCREEN_HEIGHT = window.innerHeight;
 
+    // camera vars
     var VIEW_ANGLE = 60;
     var ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT;
     var NEAR = 2;
     var FAR = 10000;
 
+    //set camera
     camera = new THREE.PerspectiveCamera ( VIEW_ANGLE, ASPECT, NEAR, FAR );
-    scene.add( camera );
-
     camera.position.set ( boardDim / 2, 5000, boardDim / 2 );
     camera.lookAt( boardDim / 2, 0, boardDim / 2 );
+    scene.add( camera );
 
+    //set controls
     controls = new THREE.OrbitControls( camera );
     controls.addEventListener( 'chance', render );
 
-
+    //get renderer
     if (window.WebGLRenderingContext) renderer = new THREE.WebGLRenderer();
     else renderer = new THREE.CanvasRenderer( { antialias: true } );
 
@@ -58,6 +60,7 @@ function initGameView () {
     console.log(board.landableAreas)
     window.addEventListener( 'mousemove', onMouseMove, false );
     window.addEventListener( 'mousedown', onMouseDown, false );
+    window.addEventListener( 'mouseup', onMouseUp, false );
 }
 
 function setupBoard () {
@@ -87,6 +90,8 @@ function setupBoard () {
         board.landableAreas[i].dimensions.height = maxDim;
         board.landableAreas[i].dimensions.rotation = rotation;
         
+
+        //for loop updates middle coordiante and rotation of each landable area
 
         if (i == 0) {           
             xMid -= avgDim;
@@ -118,48 +123,6 @@ function setupBoard () {
     }
 
 
-    // var grd = context.createLinearGradient(0, 0, 0, maxDim);
-    // grd.addColorStop(0, '#000000');
-    // grd.addColorStop(1, '#8ED6FF');
-
-    // context.font  = "normal 40px Arial";
-
-
-    // for (var i = 0; i < 40; i++) {
-    //  var dim = board.landableAreas[i].dimensions;
-    //  var name = board.landableAreas[i].name;
-    //  context.save();
-    //  context.translate( dim.xMid, dim.yMid );
-    //  context.rotate( dim.rotation );
-
-
-    //  context.fillStyle = grd;
-    //  context.fillRect( -dim.width / 2, -dim.height / 2, dim.width, dim.height);
-    //  context.rect( -dim.width / 2, -dim.height / 2, dim.width, dim.height);
-
-    //      context.fillStyle = "#FFFFFF";
-    //      console.log(name)
-    //      context.textBaseline = "middle";
-    //      context.textAlign = "center";           
-    //      context.fillText(name, 0, 0, dim.width)
-
-    //  context.restore();
-
-
-    // }
-
-
-    // context.fill();
-
-    // context.lineWidth = 1 * scale;
-    // context.strokeStyle = 'white';
-    // context.stroke();
-    // context.stroke();
-
-    // var texture = new THREE.Texture( canvas );
-    // texture.needsUpdate = true;
-
-    // var material = new THREE.MeshBasicMaterial( { map: texture } );
 
 
     var material = new THREE.MeshBasicMaterial( { color: 0x000000 } );
@@ -213,6 +176,7 @@ function setupBoard () {
         tokenMesh.position.x = board.landableAreas[0].dimensions.xMid;
         tokenMesh.position.y = 50 + height;
         tokenMesh.position.z = board.landableAreas[0].dimensions.yMid;
+        tokenMesh.boardObject = "playerToken";
 
         player.token = tokenMesh;
         objects.push (tokenMesh );
@@ -220,7 +184,7 @@ function setupBoard () {
     }
 }
 
-function onMouseMove( e ) {
+function onMouseMove ( e ) {
 
     //update previously selected to be currently selected
 
@@ -274,24 +238,33 @@ function onMouseMove( e ) {
     update();
 }
 
-function onMouseDown( e ) {
-    player.selectedObject;    
+function onMouseDown ( e ) {
+
+    // console.log("mouse down")
+
+    var player = board.players[playerId];
+
+    if (player.hoveredObject !== undefined &&
+        player.hoveredObject.object.boardObject == "playerToken"){
+            player.selectedObject = player.hoveredObject;   
+            controls.noRotate = true;
+        }
 }
 
-function animate () {
-    requestAnimationFrame( animate );
-    render();
-    update();
-}
+function onMouseUp ( e ) {
 
-function render () {
-    renderer.render( scene, camera );
+    // console.log("mouse up")
+
+    var player = board.players[playerId];
+
+    player.selectedObject = undefined;
+    controls.noRotate = false;
+
 }
 
 function update () {
 
-    controls.update();
-   
+    controls.update();   
 
     //do the following for ALL players
     for (var i = 0; i < board.players.length; i++) {
@@ -301,28 +274,26 @@ function update () {
         board.players[i].token.position.z = lAreaDim.yMid;  
     }
 
-    //TODO - PRIORITY - only update things that changed
-    //TODO - the FOR-LOOP can be optimized more by using a flag to identify previously selected item
-
 
     //do the following for THIS player 
+    var player = board.players[playerId];
 
-    var player = board.players[playerId]
+    // console.log(player.selectedObject)
 
     if ( !selectionChanged ) return;
 
     //if nothing is selected
-    if (player.hoveredObject === undefined) { 
+    if (player.hoveredObject === undefined) {
 
         //clear player selection            
-        player.outlineMesh.geometry.dispose(); 
+        player.outlineMesh.geometry.dispose();
         player.outlineMesh.geometry = blankGeometry.clone();
 
         //hide the tooltip //TODO - MOVE OUTSIDE OF IF STATEMENT ??
         $("#tooltip").hide();
 
 
-    //if selection has changed  
+    //if something is selected  
     } else { 
 
         //move players outline to this object
@@ -340,7 +311,6 @@ function update () {
         $("#tooltip").offset( { left: mouseCoord.x + 20 , top:  mouseCoord.y - 200 - 20 } );
         $("#tooltip").show();
     }
-
 
 }
 
@@ -364,10 +334,21 @@ function fillTooltipLandableArea (landableArea) {
 
     } else if (landableArea instanceof GenericLandableArea) {
         $("#tooltip").html("<p>" + landableArea.name + "</p>");
-        $("#tooltip").addClass("GenericLandableArea"); //probably not proper to call this, "generalland..."
-    } 
+        $("#tooltip").addClass("GenericLandableArea"); //probably not proper to call this "generalland..."
+    }
 
 }
+
+function animate () {
+    requestAnimationFrame( animate );
+    render();
+    update();
+}
+
+function render () {
+    renderer.render( scene, camera );
+}
+
 function startGameView () {
     initGameView();
     animate();

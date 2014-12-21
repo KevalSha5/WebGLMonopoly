@@ -1,0 +1,47 @@
+#################################################
+###### CREATE A TEXTURE AND USE AS MATERIAL######
+
+    var grd = context.createLinearGradient(0, 0, 0, maxDim);
+    grd.addColorStop(0, '#000000');
+    grd.addColorStop(1, '#8ED6FF');
+
+    context.font  = "normal 40px Arial";
+
+
+    for (var i = 0; i < 40; i++) {
+     var dim = board.landableAreas[i].dimensions;
+     var name = board.landableAreas[i].name;
+     context.save();
+     context.translate( dim.xMid, dim.yMid );
+     context.rotate( dim.rotation );
+
+
+     context.fillStyle = grd;
+     context.fillRect( -dim.width / 2, -dim.height / 2, dim.width, dim.height);
+     context.rect( -dim.width / 2, -dim.height / 2, dim.width, dim.height);
+
+         context.fillStyle = "#FFFFFF";
+         console.log(name)
+         context.textBaseline = "middle";
+         context.textAlign = "center";           
+         context.fillText(name, 0, 0, dim.width)
+
+     context.restore();
+
+
+    }
+
+
+    context.fill();
+
+    context.lineWidth = 1 * scale;
+    context.strokeStyle = 'white';
+    context.stroke();
+    context.stroke();
+
+    var texture = new THREE.Texture( canvas );
+    texture.needsUpdate = true;
+
+    var material = new THREE.MeshBasicMaterial( { map: texture } );
+
+###############################################
