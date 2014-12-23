@@ -5,23 +5,23 @@ var renderer;
 var container;
 var boardDim;
 var objects = [];
-var scale = 5;
 var playerId = 0;
+var player;
 var tooltip;
 var mouseCoord = {};
-var blankGeometry = new THREE.Geometry();
-var selectionChanged;
+var lastIntersectedObjects = [];
+var intersectedObjets = [];
 var SCREEN_WIDTH, SCREEN_HEIGHT;
 
 function initGameView () {
     scene = new THREE.Scene();
-    boardDim = 1000 * scale;
+    boardDim = 3000;
 
     SCREEN_WIDTH = window.innerWidth;
     SCREEN_HEIGHT = window.innerHeight;
 
     // camera vars
-    var VIEW_ANGLE = 60;
+    var VIEW_ANGLE = 45;
     var ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT;
     var NEAR = 2;
     var FAR = 10000;
@@ -35,6 +35,8 @@ function initGameView () {
     //set controls
     controls = new THREE.OrbitControls( camera );
     controls.addEventListener( 'chance', render );
+    controls.noPan = true;
+    controls.target = new THREE.Vector3( boardDim / 2, 0, boardDim / 2 );
 
     //get renderer
     if (window.WebGLRenderingContext) renderer = new THREE.WebGLRenderer();
@@ -43,35 +45,39 @@ function initGameView () {
     renderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT );
     renderer.shadowMapEnabled = true;
     renderer.shadowMapSoft = true;
-    renderer.setClearColor( 0xafafaf, 1 );
+    renderer.setClearColor( 0x535353, 1 );
 
     container = document.getElementById( 'gameView' );
     container.appendChild( renderer.domElement );
     
-    var dLight = new THREE.DirectionalLight( 0xffffff, .25 );
-    dLight.position.set( boardDim, boardDim, boardDim );
+    var dLight = new THREE.DirectionalLight( 0xffffff, .30 );
+    dLight.position.set( boardDim, boardDim / .75, boardDim );
     scene.add( dLight );
 
     var aLight = new THREE.AmbientLight ( 0x9a9a9a );
     scene.add( aLight );
 
 
+    playerId = 0;
+    player = board.players[playerId];
+
     setupBoard();
     console.log(board.landableAreas)
     window.addEventListener( 'mousemove', onMouseMove, false );
     window.addEventListener( 'mousedown', onMouseDown, false );
     window.addEventListener( 'mouseup', onMouseUp, false );
+
 }
 
 function setupBoard () {
 
     var canvas = document.createElement( 'canvas' );
-    canvas.width  = 1000 * scale;
-    canvas.height = 1000 * scale;
+    canvas.width  = boardDim;
+    canvas.height = boardDim
 
     var context = canvas.getContext( '2d' );
 
-    var maxDim = 140 * scale;
+    var maxDim = 520;
     var minDim = (canvas.width - 2 * maxDim) / 9;
     var avgDim = (maxDim + minDim) / 2;
 
@@ -82,17 +88,14 @@ function setupBoard () {
 
     for (var i = 0; i < 40; i++) {
 
-
         board.landableAreas[i].dimensions = {};
         board.landableAreas[i].dimensions.xMid = xMid;
         board.landableAreas[i].dimensions.yMid = yMid;
         board.landableAreas[i].dimensions.width = (i % 10 == 0) ? maxDim : minDim;
         board.landableAreas[i].dimensions.height = maxDim;
-        board.landableAreas[i].dimensions.rotation = rotation;
-        
+        board.landableAreas[i].dimensions.rotation = rotation;        
 
         //for loop updates middle coordiante and rotation of each landable area
-
         if (i == 0) {           
             xMid -= avgDim;
             rotation = 0;
@@ -124,17 +127,19 @@ function setupBoard () {
 
 
 
-
-    var material = new THREE.MeshBasicMaterial( { color: 0x000000 } );
+    // PLANE GEOMETRY
+    var material = new THREE.MeshPhongMaterial( { color: 0x00aaff } );
     var geometry = new THREE.PlaneBufferGeometry( boardDim, boardDim );
 
     var mesh = new THREE.Mesh( geometry, material );
     mesh.rotation.x = -Math.PI / 2;
-    scene.add( mesh );
     mesh.position.x = boardDim / 2;
     mesh.position.z = boardDim / 2;
+    scene.add( mesh );
+    // objects.push( mesh );
     
 
+    // ALL THE LANDABLES
     var lArea;
     var height = 40;
     for (var i = 0; i < 40; i++) {
@@ -145,48 +150,42 @@ function setupBoard () {
         mesh = new THREE.Mesh( geometry, material );
         mesh.rotation.y = lArea.rotation;
         mesh.position.set( lArea.xMid, height / 2, lArea.yMid);
-        mesh.boardObject = board.landableAreas[i];
 
+        mesh.gameRep = board.landableAreas[i];
         objects.push( mesh );
         scene.add( mesh );      
     }
 
     for (var i = 0; i < board.players.length; i++) {
 
-        var player = board.players[i];
-
-
-        //player selection outline 
+        //PLAYER SELECTION OUTLINES
         var geometry = new THREE.Geometry();
-        var outlineMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, side: THREE.FrontSide, transparent: true, opacity: 0.25} );
+        var outlineMaterial = new THREE.MeshBasicMaterial( { 
+            color: 0x345324, side: THREE.FrontSide, transparent: true, opacity: 0.25 } );
         var outlineMesh = new THREE.Mesh( geometry, outlineMaterial );
         outlineMesh.scale.multiplyScalar(1.05);
 
-        player.outlineMesh = outlineMesh;
-        player.hoveredObject = undefined;
-        player.hoveredObjectPrev = undefined;
-
+        player.outline = outlineMesh;
         scene.add( outlineMesh );
 
 
-        //player tokens
-        var tokenMaterial = new THREE.MeshPhongMaterial( {color: 0xfafa00 } );
+        //PLAYER TOKENS
+        var tokenMaterial = new THREE.MeshLambertMaterial( { 
+            color: 0xfafa00, shininess: 10 } );
         var tokenGeometry = new THREE.BoxGeometry( 100, 100, 100 );
         var tokenMesh = new THREE.Mesh( tokenGeometry, tokenMaterial );
         tokenMesh.position.x = board.landableAreas[0].dimensions.xMid;
         tokenMesh.position.y = 50 + height;
         tokenMesh.position.z = board.landableAreas[0].dimensions.yMid;
-        tokenMesh.boardObject = "playerToken";
 
+        tokenMesh.gameRep = board.players[i];
         player.token = tokenMesh;
-        objects.push (tokenMesh );
-        scene.add ( tokenMesh ); //only add token for first player for the time being
+        objects.push(tokenMesh );
+        scene.add( tokenMesh );
     }
 }
 
 function onMouseMove ( e ) {
-
-    //update previously selected to be currently selected
 
     var x, y;
 
@@ -197,6 +196,10 @@ function onMouseMove ( e ) {
         x = e.layerX;
         y = e.layerY;
     }
+
+    //for use in update()
+    mouseCoord.x = x;
+    mouseCoord.y = y;
 
     var mouseVector = new THREE.Vector3 (
              (x / renderer.domElement.width) * 2 - 1,
@@ -210,29 +213,9 @@ function onMouseMove ( e ) {
 
     var raycaster = new THREE.Raycaster(); //TODO - make raycaster a global variable, for better performance
     raycaster.ray.set( camera.position, mouseVector );
-    var intersects = raycaster.intersectObjects( objects );
 
-
-
-    var player = board.players[playerId]
-
-    // if (player.hoveredObjectPrev !== undefined) console.log(player.hoveredObjectPrev.object)
-    // if (player.hoveredObject !== undefined) console.log(player.hoveredObject.object)
-
-    player.hoveredObjectPrev = player.hoveredObject;
-    player.hoveredObject = intersects[0];
-
-    var hOP = player.hoveredObjectPrev;
-    var hO = player.hoveredObject;
-
-    if (typeof hO !== typeof hOP) selectionChanged = true;
-    else if (hO !== undefined && hOP !== undefined &&
-             hO.object.uuid != hOP.object.uuid) selectionChanged = true;
-    else selectionChanged = false;
-
-    //for use in update()
-    mouseCoord.x = x;
-    mouseCoord.y = y;
+    lastIntersectedObjects = intersectedObjets;
+    intersectedObjets = raycaster.intersectObjects( objects );
 
     //to cope with fast mouse movement
     update();
@@ -240,81 +223,67 @@ function onMouseMove ( e ) {
 
 function onMouseDown ( e ) {
 
-    // console.log("mouse down")
+    if ( intersectedObjets.length > 0 ) {
 
-    var player = board.players[playerId];
-
-    if (player.hoveredObject !== undefined &&
-        player.hoveredObject.object.boardObject == "playerToken"){
-            player.selectedObject = player.hoveredObject;   
+        if ( intersectedObjets[0].object.gameRep instanceof Player ) {
+            player.selectedObj = intersectedObjets[0];
             controls.noRotate = true;
         }
+
+    }
+
 }
 
 function onMouseUp ( e ) {
 
-    // console.log("mouse up")
-
-    var player = board.players[playerId];
-
-    player.selectedObject = undefined;
+    player.selectedObj = undefined;
     controls.noRotate = false;
 
 }
 
 function update () {
 
-    controls.update();   
+    controls.update();
 
-    //do the following for ALL players
-    for (var i = 0; i < board.players.length; i++) {
-         //update token positions (WILL NEED THIS HERE FOR INTERACTIVITY)
-        var lAreaDim = board.landableAreas[board.players[i].pos].dimensions;
-        board.players[i].token.position.x = lAreaDim.xMid;
-        board.players[i].token.position.z = lAreaDim.yMid;  
+    // $("#tooltip").show();
+    // $("#tooltip").offset( { left: mouseCoord.x + 40 , top:  mouseCoord.y - 200 - 40 } ); 
+
+    // var hoveredItemsChanged = !objsIdenticalUuid( intersectedObjets, lastIntersectedObjects );
+    // if ( !hoveredItemsChanged ) return;
+
+    if ( player.selectedObj !== undefined && intersectedObjets.length > 1 ) {
+        /*
+            This means token is selected, and as long mouse intersects
+            at least two items (one is token) update the token pos
+        */
+
+        var ground;
+        for ( var i = 0; i < intersectedObjets.length; i++ )
+            if ( intersectedObjets[i].object.gameRep instanceof GenericLandableArea ) {
+                ground = intersectedObjets[i];
+                break;            
+            }
+        player.selectedObj.object.position.x = ground.point.x;
+        player.selectedObj.object.position.z = ground.point.z;
     }
 
 
-    //do the following for THIS player 
-    var player = board.players[playerId];
 
-    // console.log(player.selectedObject)
+    if ( intersectedObjets.length > 0 ) {
 
-    if ( !selectionChanged ) return;
+        player.outline.visible = true;
+        player.outline.geometry = intersectedObjets[0].object.geometry.clone();
+        player.outline.position.copy( intersectedObjets[0].object.position );
+        player.outline.rotation.copy( intersectedObjets[0].object.rotation );
 
-    //if nothing is selected
-    if (player.hoveredObject === undefined) {
+    } else {
 
-        //clear player selection            
-        player.outlineMesh.geometry.dispose();
-        player.outlineMesh.geometry = blankGeometry.clone();
-
-        //hide the tooltip //TODO - MOVE OUTSIDE OF IF STATEMENT ??
-        $("#tooltip").hide();
-
-
-    //if something is selected  
-    } else { 
-
-        //move players outline to this object
-        player.outlineMesh.geometry = player.hoveredObject.object.geometry.clone();
-        player.outlineMesh.position.copy( player.hoveredObject.object.position );
-        player.outlineMesh.rotation.copy( player.hoveredObject.object.rotation );
-
-
-        //fill tooltip with the relevant info
-        if (player.hoveredObject.object.boardObject instanceof GenericLandableArea) {
-            fillTooltipLandableArea(player.hoveredObject.object.boardObject)
-        } 
-        
-        //show the tooltip
-        $("#tooltip").offset( { left: mouseCoord.x + 20 , top:  mouseCoord.y - 200 - 20 } );
-        $("#tooltip").show();
-    }
+        player.outline.visible = false;
+    }   
 
 }
 
-function fillTooltipLandableArea (landableArea) {
+function fillTooltipLandableArea ( landableArea ) {
 
     //clear the tooltip
     $("#tooltip").html("");
@@ -336,6 +305,18 @@ function fillTooltipLandableArea (landableArea) {
         $("#tooltip").html("<p>" + landableArea.name + "</p>");
         $("#tooltip").addClass("GenericLandableArea"); //probably not proper to call this "generalland..."
     }
+
+}
+
+function objsIdenticalUuid ( array1, array2 ) {
+
+    if ( array1.length !== array2.length ) return false;
+
+    for (var i = 0; i < array1.length; i++)
+        if (array1[i].object.uuid !== array2[i].object.uuid) 
+            return false;
+
+    return true;
 
 }
 
