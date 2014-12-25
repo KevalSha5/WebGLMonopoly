@@ -11,178 +11,34 @@ var tooltip;
 var mouseCoord = {};
 var lastIntersectedObjects = [];
 var intersectedObjets = [];
+var statusBox;
 var SCREEN_WIDTH, SCREEN_HEIGHT;
 
-function initGameView () {
-    scene = new THREE.Scene();
-    boardDim = 3000;
+var currentPlayer;
+var moveAmount;
 
-    SCREEN_WIDTH = window.innerWidth;
-    SCREEN_HEIGHT = window.innerHeight;
+function endPlayerTurn () {
 
-    // camera vars
-    var VIEW_ANGLE = 45;
-    var ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT;
-    var NEAR = 2;
-    var FAR = 10000;
+    if ( !currentPlayer.hasMoved ) {
+        statusBox.innerHTML = currentPlayer.name + " still needs to move ";
+        return;
+    }
 
-    //set camera
-    camera = new THREE.PerspectiveCamera ( VIEW_ANGLE, ASPECT, NEAR, FAR );
-    camera.position.set ( boardDim / 2, 5000, boardDim / 2 );
-    camera.lookAt( boardDim / 2, 0, boardDim / 2 );
-    scene.add( camera );
-
-    //set controls
-    controls = new THREE.OrbitControls( camera );
-    controls.addEventListener( 'chance', render );
-    controls.noPan = true;
-    controls.target = new THREE.Vector3( boardDim / 2, 0, boardDim / 2 );
-
-    //get renderer
-    if (window.WebGLRenderingContext) renderer = new THREE.WebGLRenderer();
-    else renderer = new THREE.CanvasRenderer( { antialias: true } );
-
-    renderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT );
-    renderer.shadowMapEnabled = true;
-    renderer.shadowMapSoft = true;
-    renderer.setClearColor( 0x535353, 1 );
-
-    container = document.getElementById( 'gameView' );
-    container.appendChild( renderer.domElement );
-    
-    var dLight = new THREE.DirectionalLight( 0xffffff, .30 );
-    dLight.position.set( boardDim, boardDim / .75, boardDim );
-    scene.add( dLight );
-
-    var aLight = new THREE.AmbientLight ( 0x9a9a9a );
-    scene.add( aLight );
-
-
-    playerId = 0;
-    player = board.players[playerId];
-
-    setupBoard();
-    console.log(board.landableAreas)
-    window.addEventListener( 'mousemove', onMouseMove, false );
-    window.addEventListener( 'mousedown', onMouseDown, false );
-    window.addEventListener( 'mouseup', onMouseUp, false );
+    startNextPlayerTurn();
 
 }
 
-function setupBoard () {
-
-    var canvas = document.createElement( 'canvas' );
-    canvas.width  = boardDim;
-    canvas.height = boardDim
-
-    var context = canvas.getContext( '2d' );
-
-    var maxDim = 520;
-    var minDim = (canvas.width - 2 * maxDim) / 9;
-    var avgDim = (maxDim + minDim) / 2;
-
-    var xMid = canvas.width - maxDim / 2;
-    var yMid = canvas.height - maxDim / 2;
-    var rotation = 0;
+function startNextPlayerTurn () {
 
 
-    for (var i = 0; i < 40; i++) {
+    currentPlayer = board.players[ board.turn % board.players.length ];
+    currentPlayer.hasMoved = false;
+    statusBox.innerHTML = currentPlayer.name + "'s turn. Roll the die or develop.";
+    board.turn++;
 
-        board.landableAreas[i].dimensions = {};
-        board.landableAreas[i].dimensions.xMid = xMid;
-        board.landableAreas[i].dimensions.yMid = yMid;
-        board.landableAreas[i].dimensions.width = (i % 10 == 0) ? maxDim : minDim;
-        board.landableAreas[i].dimensions.height = maxDim;
-        board.landableAreas[i].dimensions.rotation = rotation;        
+    // moveAmount = board.rollDie();
+    // console.log( currentPlayer.name + "s turn, rolled: " + moveAmount )
 
-        //for loop updates middle coordiante and rotation of each landable area
-        if (i == 0) {           
-            xMid -= avgDim;
-            rotation = 0;
-        } else if (i < 9) {
-            xMid -= minDim;
-        } else if (i == 9) {
-            xMid -= avgDim;
-            rotation = Math.PI / 2;
-        } else if (i == 10) {
-            yMid -= avgDim;
-        } else if (i < 19) {
-            yMid -= minDim;
-        } else if (i == 19) {
-            yMid -= avgDim;
-            rotation = Math.PI;
-        } else if (i == 20) {
-            xMid += avgDim;
-        } else if (i < 29) {
-            xMid += minDim;
-        } else if (i == 29) {
-            xMid += avgDim;
-            rotation = 3 * Math.PI / 2;
-        } else if (i == 30) {
-            yMid += avgDim;
-        } else if (i < 40) {
-            yMid += minDim;
-        }
-    }
-
-
-
-    // PLANE GEOMETRY
-    var material = new THREE.MeshPhongMaterial( { color: 0x00aaff } );
-    var geometry = new THREE.PlaneBufferGeometry( boardDim, boardDim );
-
-    var mesh = new THREE.Mesh( geometry, material );
-    mesh.rotation.x = -Math.PI / 2;
-    mesh.position.x = boardDim / 2;
-    mesh.position.z = boardDim / 2;
-    scene.add( mesh );
-    // objects.push( mesh );
-    
-
-    // ALL THE LANDABLES
-    var lArea;
-    var height = 40;
-    for (var i = 0; i < 40; i++) {
-        lArea = board.landableAreas[i].dimensions;
-
-        material = new THREE.MeshPhongMaterial( { color: 0x0a9a54 } );
-        geometry = new THREE.BoxGeometry( lArea.width, height, lArea.height );
-        mesh = new THREE.Mesh( geometry, material );
-        mesh.rotation.y = lArea.rotation;
-        mesh.position.set( lArea.xMid, height / 2, lArea.yMid);
-
-        mesh.gameRep = board.landableAreas[i];
-        objects.push( mesh );
-        scene.add( mesh );      
-    }
-
-    for (var i = 0; i < board.players.length; i++) {
-
-        //PLAYER SELECTION OUTLINES
-        var geometry = new THREE.Geometry();
-        var outlineMaterial = new THREE.MeshBasicMaterial( { 
-            color: 0x345324, side: THREE.FrontSide, transparent: true, opacity: 0.25 } );
-        var outlineMesh = new THREE.Mesh( geometry, outlineMaterial );
-        outlineMesh.scale.multiplyScalar(1.05);
-
-        player.outline = outlineMesh;
-        scene.add( outlineMesh );
-
-
-        //PLAYER TOKENS
-        var tokenMaterial = new THREE.MeshLambertMaterial( { 
-            color: 0xfafa00, shininess: 10 } );
-        var tokenGeometry = new THREE.BoxGeometry( 100, 100, 100 );
-        var tokenMesh = new THREE.Mesh( tokenGeometry, tokenMaterial );
-        tokenMesh.position.x = board.landableAreas[0].dimensions.xMid;
-        tokenMesh.position.y = 50 + height;
-        tokenMesh.position.z = board.landableAreas[0].dimensions.yMid;
-
-        tokenMesh.gameRep = board.players[i];
-        player.token = tokenMesh;
-        objects.push(tokenMesh );
-        scene.add( tokenMesh );
-    }
 }
 
 function onMouseMove ( e ) {
@@ -226,8 +82,36 @@ function onMouseDown ( e ) {
     if ( intersectedObjets.length > 0 ) {
 
         if ( intersectedObjets[0].object.gameRep instanceof Player ) {
+
             player.selectedObj = intersectedObjets[0];
+            player.selectedObj.object.originalPos = player.selectedObj.object.position.clone();
+            console.log( player.selectedObj.object.gameRep.name + "'s token was selected" );
             controls.noRotate = true;
+
+        } else if ( intersectedObjets[0].object.gameRep instanceof Die ) {
+
+            console.log(" Rolling Die " );
+
+            if ( currentPlayer.hasMoved ) {
+
+                statusBox.innerHTML = "Already moved. Can't roll again :\\";
+
+            } else {
+
+                moveAmount = board.die.roll();
+                currentPlayer.dest = (currentPlayer.pos + moveAmount) %
+                 board.landableAreas.length;
+                statusBox.innerHTML = currentPlayer.name + " moves " + moveAmount + " spaces.";
+
+            }
+
+        } else if ( intersectedObjets[0].object.gameRep == "End Turn" ) {
+
+            // if ( player == currentPlayer ){
+                endPlayerTurn();    
+            // } else {
+                // statusBox.innerHTML = "You cannot terminate someone elses turn";
+            // }
         }
 
     }
@@ -236,8 +120,50 @@ function onMouseDown ( e ) {
 
 function onMouseUp ( e ) {
 
+    if ( player.selectedObj !== undefined ) {
+         
+        var destLand = board.landableAreas[ player.selectedObj.object.gameRep.dest ];
+
+        var tokenCenter = player.selectedObj.object.position;
+        var destDim = destLand.dimensions;
+
+        var landIsValid = tokenCenter.x < destDim.xMid + destDim.width  / 2 &&
+                          tokenCenter.x > destDim.xMid - destDim.width  / 2 &&
+                          tokenCenter.z < destDim.yMid + destDim.height / 2 &&
+                          tokenCenter.z > destDim.yMid - destDim.height / 2;
+
+
+         if ( landIsValid ) {
+
+            if ( player.selectedObj.object.gameRep.pos != player.selectedObj.object.gameRep.dest ) {
+
+                var selectedPlayer = player.selectedObj.object.gameRep;
+
+                board.landableAreas[selectedPlayer.dest].land( selectedPlayer )
+                selectedPlayer.pos = selectedPlayer.dest;
+                selectedPlayer.hasMoved = true;
+                console.log( "Valid Land!")
+
+            }
+
+
+
+        } else {
+
+            console.log( "resetting pos", player.selectedObj.object.originalPos );
+            player.selectedObj.object.position.copy( player.selectedObj.object.originalPos );
+        }
+
+
+    } else {
+
+       
+
+    }
+
     player.selectedObj = undefined;
     controls.noRotate = false;
+    update();
 
 }
 
@@ -308,6 +234,10 @@ function fillTooltipLandableArea ( landableArea ) {
 
 }
 
+function landingLocationIsValid ( token ) {
+
+}
+
 function objsIdenticalUuid ( array1, array2 ) {
 
     if ( array1.length !== array2.length ) return false;
@@ -318,6 +248,283 @@ function objsIdenticalUuid ( array1, array2 ) {
 
     return true;
 
+}
+
+
+function setupBoard () {
+
+    // the client player
+    playerId = 0;
+    player = board.players[playerId];
+
+    // current player
+    currentPlayer = board.players[0];
+    moveAmount = 0;
+
+    var maxDim = 450;
+    var minDim = (boardDim - 2 * maxDim) / 9;
+    var avgDim = (maxDim + minDim) / 2;
+
+    var xMid = boardDim - maxDim / 2;
+    var yMid = boardDim - maxDim / 2;
+    var rotation = 0;
+
+    // used to rotate width & height
+    var lAreaRot;
+    var width, height, temp;
+
+
+
+    for (var i = 0; i < 40; i++) {    
+
+        width = (i % 10 == 0) ? maxDim : minDim;
+        height = maxDim;
+
+        lAreaRot = rotation;        
+        while ( lAreaRot > 0 ) {
+            temp = width;
+            width = height;
+            height = temp;
+            lAreaRot -= Math.PI / 2;
+        }
+
+        board.landableAreas[i].dimensions = {};
+        board.landableAreas[i].dimensions.xMid = xMid;
+        board.landableAreas[i].dimensions.yMid = yMid;
+        board.landableAreas[i].dimensions.width = width;
+        board.landableAreas[i].dimensions.height = height;
+        board.landableAreas[i].dimensions.rotation = rotation; 
+
+        //for loop updates middle coordiante and rotation of each landable area
+        if (i == 0) {           
+            xMid -= avgDim;
+            rotation = 0;
+        } else if (i < 9) {
+            xMid -= minDim;
+        } else if (i == 9) {
+            xMid -= avgDim;
+            rotation = Math.PI / 2;
+        } else if (i == 10) {
+            yMid -= avgDim;
+        } else if (i < 19) {
+            yMid -= minDim;
+        } else if (i == 19) {
+            yMid -= avgDim;
+            rotation = Math.PI;
+        } else if (i == 20) {
+            xMid += avgDim;
+        } else if (i < 29) {
+            xMid += minDim;
+        } else if (i == 29) {
+            xMid += avgDim;
+            rotation = 3 * Math.PI / 2;
+        } else if (i == 30) {
+            yMid += avgDim;
+        } else if (i < 40) {
+            yMid += minDim;
+        }
+    }
+
+
+
+    // PLANE GEOMETRY
+    var material = new THREE.MeshPhongMaterial( { color: 0x00aaff } );
+    var geometry = new THREE.PlaneBufferGeometry( boardDim, boardDim );
+
+    var mesh = new THREE.Mesh( geometry, material );
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.position.x = boardDim / 2;
+    mesh.position.z = boardDim / 2;
+    scene.add( mesh );
+    // objects.push( mesh );
+
+    
+    // ALL THE LANDABLES
+    var lArea;
+    var height = 40;
+    for (var i = 0; i < 40; i++) {
+
+        lArea = board.landableAreas[i].dimensions;
+
+        //GET THE 2D CONTEXT
+        var canvas = document.createElement( 'canvas' );
+        canvas.width  = lArea.width;
+        canvas.height = lArea.height;
+
+        var context = canvas.getContext( '2d' );
+
+        // CREATE IMAGE FOR LANDALBE AREA
+
+        // context.lineWidth = 1;
+        // context.strokeStyle = 'white';
+        // context.stroke();
+
+        context.fillStyle = "#0a9a54"
+        context.fillRect( 0, 0, canvas.width, canvas.height );
+
+
+        context.save();
+
+        context.translate( lArea.width / 2, lArea.height / 2 )
+
+        context.rotate( lArea.rotation );
+        if (i % 10 == 0) context.rotate( -Math.PI / 4 ); // rotate more for cornor areas
+
+        var canvasXMid;
+
+        if ( lArea.rotation == Math.PI / 2 || lArea.rotation == 3 * Math.PI / 2){
+            context.translate( -lArea.height / 2, -lArea.width / 2 );
+            canvasXMid = lArea.height / 2;
+
+         } else {   
+             context.translate( -lArea.width / 2, -lArea.height / 2 );
+             canvasXMid = lArea.width / 2;
+
+         }
+
+        // FILL STREET COLOR
+        if ( board.landableAreas[i] instanceof Street) {
+            context.fillStyle = "purple"
+            context.fillRect( 0, 0, lArea.width, 100 )
+        }
+
+        // console.log( lArea.rotation );
+
+        context.font = '25pt Calibri';
+        context.textAlign = 'center';
+        context.fillStyle = 'white';
+        context.textBaseline = "middle";
+        context.fillText( board.landableAreas[i].name, canvasXMid, 50, lArea.width )
+
+        context.restore();
+
+        // context.fill();
+
+
+        var texture = new THREE.Texture( canvas );
+        texture.needsUpdate = true;
+
+        canvas.remove();
+
+        material = new THREE.MeshPhongMaterial( { map: texture } );
+        geometry = new THREE.BoxGeometry( lArea.width, height, lArea.height );
+        mesh = new THREE.Mesh( geometry, material );
+        // mesh.rotation.y = lArea.rotation;
+        mesh.position.set( lArea.xMid, height / 2, lArea.yMid);
+
+        mesh.gameRep = board.landableAreas[i];
+        objects.push( mesh );
+        scene.add( mesh );
+    }
+
+    for (var i = 0; i < board.players.length; i++) {
+
+        //PLAYER SELECTION OUTLINES
+        var geometry = new THREE.Geometry();
+        var outlineMaterial = new THREE.MeshBasicMaterial( { 
+            color: 0xff0000, side: THREE.FrontSide, transparent: true, opacity: 0.25 } );
+        var outlineMesh = new THREE.Mesh( geometry, outlineMaterial );
+        outlineMesh.scale.multiplyScalar(1.05);
+
+        player.outline = outlineMesh;
+        scene.add( outlineMesh );
+
+
+        //PLAYER TOKENS
+        var tokenMaterial = new THREE.MeshLambertMaterial( { 
+            color: 0xfafa00, shininess: 10 } );
+        var tokenGeometry = new THREE.BoxGeometry( 100, 100, 100 );
+        var tokenMesh = new THREE.Mesh( tokenGeometry, tokenMaterial );
+        tokenMesh.position.x = board.landableAreas[0].dimensions.xMid;
+        tokenMesh.position.y = 50 + height;
+        tokenMesh.position.z = board.landableAreas[0].dimensions.yMid;
+
+        tokenMesh.gameRep = board.players[i];
+        player.token = tokenMesh;
+        objects.push(tokenMesh );
+        scene.add( tokenMesh );
+    }
+
+    // END TURN BUTTON
+    var turnGeometry = new THREE.CylinderGeometry( 100, 100, 100 );
+    var turnMaterial = new THREE.MeshLambertMaterial( { color: 0x00ff00 } );
+    var turnMesh = new THREE.Mesh( turnGeometry, turnMaterial );
+
+    turnMesh.position.set( 3 * boardDim / 4, 50, 3 * boardDim / 4 );
+    turnMesh.gameRep = "End Turn";
+
+    objects.push( turnMesh );
+    scene.add( turnMesh );
+
+    // ADD DIE
+    var dieGeometry = new THREE.BoxGeometry( 200, 200, 200 );
+    var dieMaterial = new THREE.MeshLambertMaterial( { color: 0xff0000 } );
+    var dieMesh = new THREE.Mesh( dieGeometry, dieMaterial );
+
+    dieMesh.position.set( boardDim / 2, 100, boardDim / 2 );
+    dieMesh.gameRep = board.die;
+
+    objects.push( dieMesh );
+    scene.add( dieMesh );
+}
+
+
+
+function initGameView () {
+    scene = new THREE.Scene();
+    boardDim = 3000;
+
+    SCREEN_WIDTH = window.innerWidth;
+    SCREEN_HEIGHT = window.innerHeight;
+
+    // camera vars
+    var VIEW_ANGLE = 45;
+    var ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT;
+    var NEAR = 2;
+    var FAR = 10000;
+
+    //set camera
+    camera = new THREE.PerspectiveCamera ( VIEW_ANGLE, ASPECT, NEAR, FAR );
+    camera.position.set ( boardDim / 2, 3000, boardDim / 2 );
+    camera.lookAt( boardDim / 2, 0, boardDim / 2 );
+    scene.add( camera );
+
+    //set controls
+    controls = new THREE.OrbitControls( camera );
+    controls.addEventListener( 'chance', render );
+    controls.noPan = true;
+    controls.target = new THREE.Vector3( boardDim / 2, 0, boardDim / 2 );
+
+    //get renderer
+    if (window.WebGLRenderingContext) renderer = new THREE.WebGLRenderer();
+    else renderer = new THREE.CanvasRenderer( { antialias: true } );
+
+    renderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT );
+    renderer.shadowMapEnabled = true;
+    renderer.shadowMapSoft = true;
+    renderer.setClearColor( 0x535353, 1 );
+
+    container = document.getElementById( 'gameView' );
+    container.appendChild( renderer.domElement );
+    
+    var dLight = new THREE.DirectionalLight( 0xffffff, .30 );
+    dLight.position.set( boardDim, boardDim / .75, boardDim );
+    scene.add( dLight );
+
+    var aLight = new THREE.AmbientLight ( 0x9a9a9a );
+    scene.add( aLight );
+
+    console.log(board.landableAreas)
+    container.addEventListener( 'mousemove', onMouseMove, false );
+    container.addEventListener( 'mousedown', onMouseDown, false );
+    container.addEventListener( 'mouseup', onMouseUp, false );
+
+    statusBox = document.getElementById("statusBox");
+
+
+    setupBoard();
+
+    startNextPlayerTurn();
 }
 
 function animate () {

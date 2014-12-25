@@ -11,6 +11,7 @@
         <script src="js/Bank.js"></script>
         <script src="js/Player.js"></script>
         <script src="js/Board.js"></script>
+        <script src="js/Die.js"></script>
 
         <!-- property objects -->
         <script src="js/Properties/GenericLandableArea.js"></script>
@@ -31,6 +32,27 @@
             * {
                 margin:  0;
                 padding: 0;
+            }
+
+            #statusBox {
+                z-index: 1;
+                position: fixed;
+                width: 75%;
+                height: 60;
+                display: block;
+                left: 50%;
+                margin: 15 0 0 -37.5%;
+                background-color: rgba( 223, 134, 235, .5 );
+                border: 1 solid black;
+                text-align: center;
+                color: white;
+                height: 60;
+                line-height: 60px;
+            }
+
+            #statusBox:first-child {
+                color: black;
+                position: relative;
             }
 
             #gameView {
@@ -92,6 +114,7 @@
 
     <body>
         <div id="tooltip">testing the tooltip</div>
+        <div id='statusBox'></div>
         <div id="gameView"></div>
         <button onClick="board.playerTurn()"> Player Turn </button>
     </body>

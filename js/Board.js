@@ -1,7 +1,8 @@
 function Board() {
     this.players = [];
-    this.currentPlayerIndex = 0;
     this.landableAreas = [];
+    this.turn = 0;
+    this.die;
 }
 
 Board.prototype.addLandableArea = function (landableArea) {
@@ -15,9 +16,9 @@ Board.prototype.addPlayer = function (player) {
 }
 
 Board.prototype.start = function () {
-    for (var func in Rules.ON_START) {
-        func();
-    }
+
+
+
 }
 
 Board.prototype.playerTurn = function () {
@@ -25,12 +26,13 @@ Board.prototype.playerTurn = function () {
     
     var moveAmount = this.rollDie();
 
-    this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
-    var currentPlayer = this.players[ this.currentPlayerIndex ];
+    this.turn++;
+    var currentPlayer = this.players[ this.turn % this.players.length ];
 
     var newPos = (currentPlayer.pos + moveAmount) % this.landableAreas.length;
     currentPlayer.pos = newPos;
     this.landableAreas[newPos].land( currentPlayer );
+
 
     console.log(this.players)
     console.log("\n")

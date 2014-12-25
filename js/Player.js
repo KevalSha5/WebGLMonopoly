@@ -4,6 +4,6 @@ function Player(name) {
     this.money = 1500;
 
     //gui vars
-    this.selectedObject = null;
-    this.selectedObjectPrev = null;
+    this.dest = this.pos;
+    this.hasMoved = true;
 }

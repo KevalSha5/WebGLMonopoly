@@ -10,12 +10,13 @@ function init() {
 
     addLandableAreas();
     addPlayers();
+    addDie();
 
     // console.log(boardTheme.landableAreas.length)
 
     startGameView();
 
-    board.playerTurn();
+    // board.playerTurn();
 
 }
 
@@ -79,4 +80,8 @@ function addLandableAreas() {
 function addPlayers() {	
     board.addPlayer( new Player('Bob') );
     board.addPlayer( new Player('Alice') );
+}
+
+function addDie() {
+    board.die = new Die( 2, 6 );
 }
