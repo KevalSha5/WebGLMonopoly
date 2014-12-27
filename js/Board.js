@@ -3,6 +3,7 @@ function Board() {
     this.landableAreas = [];
     this.turn = 0;
     this.die;
+    new Bank();
 }
 
 Board.prototype.addLandableArea = function (landableArea) {

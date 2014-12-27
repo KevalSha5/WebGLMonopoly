@@ -30,7 +30,6 @@ function endPlayerTurn () {
 
 function startNextPlayerTurn () {
 
-
     currentPlayer = board.players[ board.turn % board.players.length ];
     currentPlayer.hasMoved = false;
     statusBox.innerHTML = currentPlayer.name + "'s turn. Roll the die or develop.";
@@ -234,10 +233,6 @@ function fillTooltipLandableArea ( landableArea ) {
 
 }
 
-function landingLocationIsValid ( token ) {
-
-}
-
 function objsIdenticalUuid ( array1, array2 ) {
 
     if ( array1.length !== array2.length ) return false;
@@ -249,7 +244,6 @@ function objsIdenticalUuid ( array1, array2 ) {
     return true;
 
 }
-
 
 function setupBoard () {
 
@@ -335,7 +329,7 @@ function setupBoard () {
     mesh.rotation.x = -Math.PI / 2;
     mesh.position.x = boardDim / 2;
     mesh.position.z = boardDim / 2;
-    scene.add( mesh );
+    // scene.add( mesh );
     // objects.push( mesh );
 
     
@@ -355,13 +349,10 @@ function setupBoard () {
 
         // CREATE IMAGE FOR LANDALBE AREA
 
-        // context.lineWidth = 1;
-        // context.strokeStyle = 'white';
         // context.stroke();
 
-        context.fillStyle = "#0a9a54"
+        context.fillStyle = "#CDE6D0"
         context.fillRect( 0, 0, canvas.width, canvas.height );
-
 
         context.save();
 
@@ -382,33 +373,103 @@ function setupBoard () {
 
          }
 
+
+        var propColor;
+
         // FILL STREET COLOR
         if ( board.landableAreas[i] instanceof Street) {
-            context.fillStyle = "purple"
+            propColor = board.landableAreas[i].color;
+            context.fillStyle = propColor;
             context.fillRect( 0, 0, lArea.width, 100 )
         }
 
+
         // console.log( lArea.rotation );
 
-        context.font = '25pt Calibri';
+        context.font = '27pt Calibri';
         context.textAlign = 'center';
-        context.fillStyle = 'white';
+        context.fillStyle = 'black';
         context.textBaseline = "middle";
-        context.fillText( board.landableAreas[i].name, canvasXMid, 50, lArea.width )
+
+        
+        var name = board.landableAreas[i].name;
+        var lines = name.split("\n");
+        // console.log( lines.length )
+        // var line = "";
+
+        var offset = 0;
+        if (board.landableAreas[i] instanceof Street) offset = 100;
+
+        for ( var j = 0; j < lines.length; j++ ) {
+
+            context.fillText( lines[j], canvasXMid, offset + (40 * (j + 1)), lArea.width )
+
+        }
+
+        // PROPERTY PRICE
+        if ( board.landableAreas[i] instanceof GenericProperty ) {
+
+            var bottom = lArea.height;
+            if ( lArea.rotation == Math.PI / 2 || lArea.rotation == 3 * Math.PI / 2)
+                bottom = lArea.width;
+
+            var cost = board.landableAreas[i].cost;
+            context.fillText( "$" + cost, canvasXMid, bottom - 30, lArea.width)
+
+        }
+
+        // context.fillText( board.landableAreas[i].name, canvasXMid, 50, lArea.width )
+       
+        if (board.landableAreas[i] instanceof Street)
+            context.rect( 0, 0, canvas.width, offset );
 
         context.restore();
+                
+        context.lineWidth = 5;
+        context.strokeStyle = 'black';
+        context.rect( 0, 0, canvas.width, canvas.height );
+        context.stroke();
 
         // context.fill();
 
 
         var texture = new THREE.Texture( canvas );
+        canvas.remove();
         texture.needsUpdate = true;
 
-        canvas.remove();
+        var mainFaceMaterial = new THREE.MeshBasicMaterial( { map: texture } );
+        var backFaceMaterial = new THREE.MeshBasicMaterial( { color: propColor } );
+        var defaultMaterial  = new THREE.MeshPhongMaterial( { color: 0x0a9a54, shading: THREE.FlatShading, vertexColors: THREE.VertexColors } );
 
-        material = new THREE.MeshPhongMaterial( { map: texture } );
+        materials = [
+            defaultMaterial,
+            defaultMaterial,
+            mainFaceMaterial,
+            defaultMaterial,
+            defaultMaterial,
+            defaultMaterial
+        ];
+
+        var backFaceIndex;
+        if ( lArea.rotation == 0 )               backFaceIndex = 5;
+        if ( lArea.rotation == Math.PI / 2 )     backFaceIndex = 0;
+        if ( lArea.rotation == Math.PI )         backFaceIndex = 4;
+        if ( lArea.rotation == 3 * Math.PI / 2 ) backFaceIndex = 1;
+
+        if (board.landableAreas[i] instanceof Street)
+            materials[ backFaceIndex ] = backFaceMaterial;
+
+        // 0 - 6
+        // 1 - 1
+        // 2 - 5
+        // 3 - 2
+
         geometry = new THREE.BoxGeometry( lArea.width, height, lArea.height );
-        mesh = new THREE.Mesh( geometry, material );
+
+
+
+
+        mesh = new THREE.Mesh( geometry, new THREE.MeshFaceMaterial( materials ) );
         // mesh.rotation.y = lArea.rotation;
         mesh.position.set( lArea.xMid, height / 2, lArea.yMid);
 
@@ -488,13 +549,7 @@ function initGameView () {
     camera.position.set ( boardDim / 2, 3000, boardDim / 2 );
     camera.lookAt( boardDim / 2, 0, boardDim / 2 );
     scene.add( camera );
-
-    //set controls
-    controls = new THREE.OrbitControls( camera );
-    controls.addEventListener( 'chance', render );
-    controls.noPan = true;
-    controls.target = new THREE.Vector3( boardDim / 2, 0, boardDim / 2 );
-
+    
     //get renderer
     if (window.WebGLRenderingContext) renderer = new THREE.WebGLRenderer();
     else renderer = new THREE.CanvasRenderer( { antialias: true } );
@@ -507,9 +562,26 @@ function initGameView () {
     container = document.getElementById( 'gameView' );
     container.appendChild( renderer.domElement );
     
-    var dLight = new THREE.DirectionalLight( 0xffffff, .30 );
-    dLight.position.set( boardDim, boardDim / .75, boardDim );
-    scene.add( dLight );
+
+    //set controls
+    controls = new THREE.OrbitControls( camera );
+    controls.addEventListener( 'chance', render );
+    // var delta = {};
+    // delta.x = 0;
+    // delta.y = -500;
+    // controls.pan( delta );
+    // controls.noPan = true;
+    // controls.scope = container;
+    controls.target = new THREE.Vector3( boardDim / 2, 0, boardDim / 2 );
+
+    var dLight1 = new THREE.DirectionalLight( 0xffffff, .30 );
+    dLight1.position.set( boardDim, boardDim / .75, boardDim );
+    scene.add( dLight1 );
+
+    // var dLight2 = new THREE.DirectionalLight( 0xffffff, .30 );
+    // dLight2.position.set( 0, boardDim / .75, 0 );
+    // dLight2.target.position.set( boardDim, 0, boardDim );
+    // scene.add( dLight2 );
 
     var aLight = new THREE.AmbientLight ( 0x9a9a9a );
     scene.add( aLight );

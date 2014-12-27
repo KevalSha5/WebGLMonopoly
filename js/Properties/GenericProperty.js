@@ -25,7 +25,7 @@ GenericProperty.prototype.land = function (player) {
 
 		} else {
 
-			alert("auction stub");
+			var winner = Bank.auction( this );
 
 		}
 	}

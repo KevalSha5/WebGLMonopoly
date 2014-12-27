@@ -28,6 +28,7 @@
         <!-- theme -->
         <script src="themes/warcraft/theme.js"></script>   
 
+        <link rel="stylesheet" href="css/jquery-ui.css">
         <style>
             * {
                 margin:  0;
@@ -49,6 +50,77 @@
                 height: 60;
                 line-height: 60px;
             }
+
+            #modal-background {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: black;
+                opacity: .50;
+                -webkit-opacity: .5;
+                -moz-opacity: .5;
+                filter: alpha(opacity=50);
+                z-index: 1000;
+            }
+
+            #modal-auction-window {
+                 box-sizing:border-box;
+                -moz-box-sizing:border-box;
+                -webkit-box-sizing:border-box;
+                background-color: black;
+                border: 5 solid #cea23b;
+                width: 750;
+                height: 500;
+                left: 50%;
+                top: 50%;
+                margin-left: -375;
+                margin-top: -250;
+                position: fixed;
+                display: none;
+                z-index: 1000;
+            }
+
+            #auction-window-prop-info {
+                top: 75;
+                left: 50;
+                width: 300;
+                height: 350;
+                margin: 0;
+                padding: 0;
+                background-color: white;
+                position: absolute;
+                display: block;
+                z-index: 1000;
+            }
+
+            #auction-window-bid-info {
+                top: 75;
+                right: 50;
+                width: 300;
+                height: 150;
+                background-color: white;
+                position: absolute;
+                display: block;
+                z-index: 1000;
+            }
+
+            #auction-window-bid-controls {
+                top: 275;
+                right: 50;
+                width: 300;
+                height: 150;
+                background-color: white;
+                position: absolute;
+                display: block;
+                z-index: 1000;
+            }
+
+            #modal-background.active, #modal-auction-window.active {
+                display: block;
+            }​
 
             #statusBox:first-child {
                 color: black;
@@ -113,6 +185,17 @@
     </head>
 
     <body>
+        <div id="modal-background"></div>
+        <div id="modal-auction-window">
+            <div id="auction-window-prop-info"></div>
+            <div id="auction-window-bid-info"></div>
+            <div id="auction-window-bid-controls">
+                <button id="auction-window-button-increase-bid">Increase Bid</button>
+            </div>
+
+            <button id="auction-window-button-leave">Opt-out</button>
+
+        </div>
         <div id="tooltip">testing the tooltip</div>
         <div id='statusBox'></div>
         <div id="gameView"></div>

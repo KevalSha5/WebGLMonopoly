@@ -1,5 +1,8 @@
 function Bank() {
+
 	var moneyReserve = 30000;
+	// AUCTION BUTTON EVENT LISTENRS
+	$( "#auction-window-button-leave" ).on( "mousedown", endAuction );
 }
 
 Bank.sell = function (property, buyer) {
@@ -22,5 +25,47 @@ Bank.handleTransaction = function (reciever, payee, amount) {
 	} else {
 		alert("buyer payee does not have enough money");
 	}
+
 }
 
+
+
+var updateInterval;
+Bank.auction = function ( property ) {
+
+
+
+	// PAUSE GUI / GAME
+    $("#modal-background").toggleClass("active");
+    $("#modal-auction-window").toggleClass("active");
+    controls.enabled = false;
+
+    var seconds = 0;
+    var timeLimit = 15;
+    var timeRemaining = timeLimit;
+
+	var updateAuctionTimer = function () {		
+		$("#auction-window-bid-info").html( timeRemaining-- + " second(s) remaing.");
+		if (timeRemaining == 0) endAuction();
+	}
+
+
+	updateInterval = setInterval( updateAuctionTimer, 1000 );
+
+
+	return null; // NEED TO RETURN WINNER
+    
+	
+}
+
+
+var endAuction = function () {
+	window.clearInterval( updateInterval );
+	$("#auction-window-bid-info").html( "Auction has ended" );
+
+
+    // REANABLE GUI/GAME
+    controls.enabled = true;
+    $("#modal-auction-window").toggleClass("active");
+    $("#modal-background").toggleClass("active");
+}
