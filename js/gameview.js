@@ -9,6 +9,8 @@ var playerId = 0;
 var player;
 var tooltip;
 var mouseCoord = {};
+var timeIdle = 0;
+var lastTime = new Date().getTime();
 var lastIntersectedObjects = [];
 var intersectedObjets = [];
 var statusBox;
@@ -71,6 +73,8 @@ function onMouseMove ( e ) {
 
     lastIntersectedObjects = intersectedObjets;
     intersectedObjets = raycaster.intersectObjects( objects );
+
+    lastTime = new Date().getTime();
 
     //to cope with fast mouse movement
     update();
@@ -170,11 +174,37 @@ function update () {
 
     controls.update();
 
-    // $("#tooltip").show();
-    // $("#tooltip").offset( { left: mouseCoord.x + 40 , top:  mouseCoord.y - 200 - 40 } ); 
+    timeIdle = new Date().getTime() - lastTime;
+    // console.log( timeIdle );    
 
-    // var hoveredItemsChanged = !objsIdenticalUuid( intersectedObjets, lastIntersectedObjects );
-    // if ( !hoveredItemsChanged ) return;
+
+    // TODO - Some minor root canaling 
+
+
+    var hoveredItemsChanged = !objsIdenticalUuid( intersectedObjets, lastIntersectedObjects );
+    for (var i = 0; i < intersectedObjets.length; i++) 
+        if (intersectedObjets[i].object.gameRep instanceof Player)
+            hoveredItemsChanged = true;
+
+
+    if ( timeIdle > 500 ) {
+
+        if ( intersectedObjets.length > 0)
+             if ( intersectedObjets[0].object.gameRep instanceof GenericLandableArea )
+                fillTooltipLandableArea( intersectedObjets[0].object.gameRep )
+            else if ( intersectedObjets[0].object.gameRep instanceof Player )
+                fillTooltipPlayer( intersectedObjets[0].object.gameRep )
+
+        $("#tooltip").show();
+        $("#tooltip").offset( { left: mouseCoord.x + 40 , top:  mouseCoord.y - 200 - 40 } ); 
+
+    } else if (hoveredItemsChanged) {
+
+        $("#tooltip").hide();
+
+    }
+
+    if ( !hoveredItemsChanged ) return;
 
     if ( player.selectedObj !== undefined && intersectedObjets.length > 1 ) {
         /*
@@ -195,6 +225,8 @@ function update () {
 
 
     if ( intersectedObjets.length > 0 ) {
+
+
 
         player.outline.visible = true;
         player.outline.geometry = intersectedObjets[0].object.geometry.clone();
@@ -230,6 +262,18 @@ function fillTooltipLandableArea ( landableArea ) {
         $("#tooltip").html("<p>" + landableArea.name + "</p>");
         $("#tooltip").addClass("GenericLandableArea"); //probably not proper to call this "generalland..."
     }
+
+}
+
+function fillTooltipPlayer( player ) {
+
+    //clear the tooltip
+    $("#tooltip").html("");
+    $("#tooltip").removeClass();
+
+
+    $("#tooltip").html("<p>" + player.name + "</p>");
+    $("#tooltip").addClass("Player");
 
 }
 
@@ -381,6 +425,10 @@ function setupBoard () {
             propColor = board.landableAreas[i].color;
             context.fillStyle = propColor;
             context.fillRect( 0, 0, lArea.width, 100 )
+        } else {
+
+            propColor = "#CDE6D0";
+
         }
 
 
@@ -439,7 +487,7 @@ function setupBoard () {
 
         var mainFaceMaterial = new THREE.MeshBasicMaterial( { map: texture } );
         var backFaceMaterial = new THREE.MeshBasicMaterial( { color: propColor } );
-        var defaultMaterial  = new THREE.MeshPhongMaterial( { color: 0x0a9a54, shading: THREE.FlatShading, vertexColors: THREE.VertexColors } );
+        var defaultMaterial  = new THREE.MeshPhongMaterial( { color: 0x0a9a54 } );
 
         materials = [
             defaultMaterial,
