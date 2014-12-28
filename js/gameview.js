@@ -11,6 +11,7 @@ var tooltip;
 var mouseCoord = {};
 var timeIdle = 0;
 var lastTime = new Date().getTime();
+var selectedObj = undefined;
 var lastIntersectedObjects = [];
 var intersectedObjets = [];
 var statusBox;
@@ -84,14 +85,70 @@ function onMouseDown ( e ) {
 
     if ( intersectedObjets.length > 0 ) {
 
-        if ( intersectedObjets[0].object.gameRep instanceof Player ) {
+        var objGameRep = intersectedObjets[0].object.gameRep;
 
-            player.selectedObj = intersectedObjets[0];
-            player.selectedObj.object.originalPos = player.selectedObj.object.position.clone();
-            console.log( player.selectedObj.object.gameRep.name + "'s token was selected" );
+        if ( objGameRep instanceof Player ) {
+
+            selectedObj = intersectedObjets[0];
+            selectedObj.object.originalPos = selectedObj.object.position.clone();
             controls.noRotate = true;
 
-        } else if ( intersectedObjets[0].object.gameRep instanceof Die ) {
+        } else if ( objGameRep instanceof Die ) {
+
+            selectedObj = intersectedObjets[0];
+
+        } else if ( objGameRep == "End Turn" ) {
+
+            endPlayerTurn();
+
+        } else {
+
+            selectedObj = undefined;
+
+        }
+}
+
+function onMouseUp ( e ) {
+
+    if ( selectedObj !== undefined ) {
+
+        var objGameRep = selectedObj.object.gameRep;
+
+        if ( objGameRep instanceof  Player ) {
+
+            console.log( "token selected" );
+             
+            var destLand = board.landableAreas[ objGameRep.dest ];
+    
+            var tokenCenter = selectedObj.object.position;
+            var destDim = destLand.dimensions;
+    
+            var landIsValid = tokenCenter.x < destDim.xMid + destDim.width  / 2 &&
+                              tokenCenter.x > destDim.xMid - destDim.width  / 2 &&
+                              tokenCenter.z < destDim.yMid + destDim.height / 2 &&
+                              tokenCenter.z > destDim.yMid - destDim.height / 2;
+    
+    
+             if ( landIsValid ) {
+    
+                if ( objGameRep.pos != objGameRep.dest ) {
+    
+                    var selectedPlayer = objGameRep;
+    
+                    board.landableAreas[ selectedPlayer.dest ].land( selectedPlayer )
+                    selectedPlayer.pos = selectedPlayer.dest;
+                    selectedPlayer.hasMoved = true;
+                    console.log( "Valid Land!")
+    
+                }
+
+            } else {
+    
+                console.log( "resetting pos", selectedObj.object.originalPos );
+                selectedObj.object.position.copy( selectedObj.object.originalPos );
+            }
+
+        } else if ( objGameRep instanceof Die ) {
 
             console.log(" Rolling Die " );
 
@@ -103,68 +160,16 @@ function onMouseDown ( e ) {
 
                 moveAmount = board.die.roll();
                 currentPlayer.dest = (currentPlayer.pos + moveAmount) %
-                 board.landableAreas.length;
+                board.landableAreas.length;
                 statusBox.innerHTML = currentPlayer.name + " moves " + moveAmount + " spaces.";
 
             }
 
-        } else if ( intersectedObjets[0].object.gameRep == "End Turn" ) {
-
-            // if ( player == currentPlayer ){
-                endPlayerTurn();    
-            // } else {
-                // statusBox.innerHTML = "You cannot terminate someone elses turn";
-            // }
         }
 
     }
 
-}
-
-function onMouseUp ( e ) {
-
-    if ( player.selectedObj !== undefined ) {
-         
-        var destLand = board.landableAreas[ player.selectedObj.object.gameRep.dest ];
-
-        var tokenCenter = player.selectedObj.object.position;
-        var destDim = destLand.dimensions;
-
-        var landIsValid = tokenCenter.x < destDim.xMid + destDim.width  / 2 &&
-                          tokenCenter.x > destDim.xMid - destDim.width  / 2 &&
-                          tokenCenter.z < destDim.yMid + destDim.height / 2 &&
-                          tokenCenter.z > destDim.yMid - destDim.height / 2;
-
-
-         if ( landIsValid ) {
-
-            if ( player.selectedObj.object.gameRep.pos != player.selectedObj.object.gameRep.dest ) {
-
-                var selectedPlayer = player.selectedObj.object.gameRep;
-
-                board.landableAreas[selectedPlayer.dest].land( selectedPlayer )
-                selectedPlayer.pos = selectedPlayer.dest;
-                selectedPlayer.hasMoved = true;
-                console.log( "Valid Land!")
-
-            }
-
-
-
-        } else {
-
-            console.log( "resetting pos", player.selectedObj.object.originalPos );
-            player.selectedObj.object.position.copy( player.selectedObj.object.originalPos );
-        }
-
-
-    } else {
-
-       
-
-    }
-
-    player.selectedObj = undefined;
+    selectedObj = undefined;
     controls.noRotate = false;
     update();
 
@@ -187,26 +192,26 @@ function update () {
             hoveredItemsChanged = true;
 
 
-    if ( timeIdle > 500 ) {
+    // if ( timeIdle > 500 ) {
 
-        if ( intersectedObjets.length > 0)
-             if ( intersectedObjets[0].object.gameRep instanceof GenericLandableArea )
-                fillTooltipLandableArea( intersectedObjets[0].object.gameRep )
-            else if ( intersectedObjets[0].object.gameRep instanceof Player )
-                fillTooltipPlayer( intersectedObjets[0].object.gameRep )
+    //     if ( intersectedObjets.length > 0)
+    //          if ( intersectedObjets[0].object.gameRep instanceof GenericLandableArea )
+    //             fillTooltipLandableArea( intersectedObjets[0].object.gameRep )
+    //         else if ( intersectedObjets[0].object.gameRep instanceof Player )
+    //             fillTooltipPlayer( intersectedObjets[0].object.gameRep )
 
-        $("#tooltip").show();
-        $("#tooltip").offset( { left: mouseCoord.x + 40 , top:  mouseCoord.y - 200 - 40 } ); 
+    //     $("#tooltip").show();
+    //     $("#tooltip").offset( { left: mouseCoord.x + 40 , top:  mouseCoord.y - 200 - 40 } ); 
 
-    } else if (hoveredItemsChanged) {
+    // } else if (hoveredItemsChanged) {
 
-        $("#tooltip").hide();
+    //     $("#tooltip").hide();
 
-    }
+    // }
 
     if ( !hoveredItemsChanged ) return;
 
-    if ( player.selectedObj !== undefined && intersectedObjets.length > 1 ) {
+    if ( selectedObj !== undefined && intersectedObjets.length > 1 ) {
         /*
             This means token is selected, and as long mouse intersects
             at least two items (one is token) update the token pos
@@ -218,8 +223,8 @@ function update () {
                 ground = intersectedObjets[i];
                 break;            
             }
-        player.selectedObj.object.position.x = ground.point.x;
-        player.selectedObj.object.position.z = ground.point.z;
+        selectedObj.object.position.x = ground.point.x;
+        selectedObj.object.position.z = ground.point.z;
     }
 
 
@@ -513,10 +518,6 @@ function setupBoard () {
         // 3 - 2
 
         geometry = new THREE.BoxGeometry( lArea.width, height, lArea.height );
-
-
-
-
         mesh = new THREE.Mesh( geometry, new THREE.MeshFaceMaterial( materials ) );
         // mesh.rotation.y = lArea.rotation;
         mesh.position.set( lArea.xMid, height / 2, lArea.yMid);
