@@ -30,6 +30,10 @@ UI.tooltip = function ( obj ) {
 
 }
 
+UI.propertyOptions = function ( obj ) {
+	
+}
+
 UI.auction = function ( property ) {
 
 	removeListeners();
@@ -38,23 +42,40 @@ UI.auction = function ( property ) {
 	$("#ui-auction-window").addClass("ui-window");
 
 	fillContent( $("#ui-auction-property-info"), property );
+	/*
+		TODO - Right below the property info, need to add information
+		about the other property of similar types.
+		i.e. for a railroad, show the owners of other railroads (if any)
+		i.e. for an orange street, show who owns other orange streets
+		Format it so only the title of the property and the owner is shown
+	*/
 
 	var seconds = 0;
 	var currentBid = 0;
 	var highestBidder = "No Bids Yet";
 
-	var bidAmountField;
-	var bidButton;
+	var bidButton = $("#ui-auction-bid-control").find(":button");
+	var bidTextfield = $("#ui-auction-bid-control").find(":input");
+	
+	bidButton.bind( "click", function() {
+		/*
+		 	TODO - Make the bid function go through Bank object
+		*/
+		currentBid = bidTextfield.val();
+	});
 
-	var preRunTime = 5;
+	var preRunTime = 4;
 	var runTime = 15 + preRunTime;
-	var postRunTime = 3 + runTime;
+	var postRunTime = 4 + runTime;
 
 	var preRun = function () {
 		$("#ui-auction-bid-info").find("h1").text("Auction starts in " + (preRunTime - seconds) + " seconds.")
 	}
 
 	var run = function () {
+		/*
+			TODO - Need to update highest bidder & bid in real time
+		*/
 		$("#ui-auction-bid-info").find("h1").text( runTime - seconds + " seconds remaining." );
 		$("#ui-auction-current-bid").text( "Current bid is $" + currentBid );
 		$("#ui-auction-highest-bidder").text( highestBidder );
@@ -75,6 +96,8 @@ UI.auction = function ( property ) {
 			clearInterval( timer );
 			$("#ui-modal-wrapper").fadeOut(1000);
 			$("#ui-auction-window").fadeOut(1500);
+			$("#ui-auction-window").removeClass("ui-window");
+			addListeners();
 		}
 
 		seconds++;
@@ -118,6 +141,11 @@ function fillWithStreet ( element, street ) {
 
 
 	streetDiv.append( streetNameDiv );
+	/*
+		TODO - Instead of using append() below to change the html,
+		use pure jQuery ( like it's done in fillWithRailroad()
+		& fillWithUtility() to change the html)
+	*/
 	streetDiv.append( 
 		"<table>" +
 
@@ -165,9 +193,14 @@ function fillWithRailroad ( element, railroad ) {
 	var genPropDiv  = $("<div/>").addClass( "ui-content-generic-property");
 	var railroadDiv = $("<div/>").addClass( "ui-content-railroad" );
 
-	var table, row, cell1;
+	var table, row;
 	table = $("<table></table>").appendTo( railroadDiv );
 
+	/*
+		TODO - Needs a little better formatting to 
+		better resemble actual card 
+		Also need to add railroad icon/image
+	*/
 	row = $("<tr></tr>");
 	$("<td></td>").attr( { align: "center", colspan: "2" } ).text("Railroad Image").appendTo( row );
 	row.appendTo( table );
@@ -216,6 +249,11 @@ function fillWithUtility ( element, utility ) {
 	var table, row;
 	table = $("<table></table>").appendTo( utilityDiv );
 
+	/*
+		TODO - Needs a little better formatting to 
+		better resemble actual card 
+		Also need to add utility icon/image
+	*/
 	row = $("<tr></tr>");
 	$("<td></td>").attr( { align: "center", colspan: "2" } ).text("Utility Image").appendTo( row );
 	row.appendTo( table );

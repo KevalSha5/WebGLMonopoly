@@ -63,7 +63,7 @@ function addLandableAreas() {
     board.addLandableArea( new Street("Fairbreeze\nVillage", 200, 12, "#F7941D") );
 
 
-    board.addLandableArea( new GenericLandableArea("Free Parking") );
+	board.addLandableArea( new GenericLandableArea("Free Parking") );
     board.addLandableArea( new Street("Valley of Trials", 220, 18, "#ED1B24") );
     board.addLandableArea( new GenericLandableArea("Chance") );
     board.addLandableArea( new Street("Razor Hill", 220, 18, "#ED1B24") );

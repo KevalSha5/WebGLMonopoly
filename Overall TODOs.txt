@@ -1,0 +1,17 @@
+• Add UI Property Options
+• Floss code in Gameview.js to make it more succinent
+• Add animations for rolling a Dice (# of dies should be modular)
+• Add hotel / house 3d Objects
+• Add variety of new tokens (or atleast add player letter on current cube-token)
+• Add auto move button
+• Make tokens shiny
+• Make Board load landable areas from a themed JSON file
+• Make a web page that allows users to create a theme
+• Better token / landable area / house collision
+• Somehow make this mobile friendly
+• Add Chance & Community Chest Cards & Actions
+• Images for 
+	○ Railroads
+	○ Utilities
+	○ Chance & Community Chest Cards
+	○ Chance & Community Chest Landables

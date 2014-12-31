@@ -76,20 +76,27 @@
             }
 
             #ui-auction-bid-control {
+                margin-top: 100;
                 float: right;
                 width: 325;
                 color: white;
             }
 
-            #ui-auction-bid-control input[type="text"] {
+            #ui-auction-bid-control input {
               padding: 10px;
               border: solid 1px #fff;
               box-shadow: inset 1px 1px 2px 0 #707070;
               transition: box-shadow 0.3s;
             }
-            #ui-auction-bid-control input[type="text"]:focus,
-            #ui-auction-bid-control input[type="text"].focus {
+            #ui-auction-bid-control input:focus,
+            #ui-auction-bid-control input.focus {
               box-shadow: inset 1px 1px 2px 0 #c9c9c9;
+            }            
+
+            #ui-auction-bid-control button {
+                width: 100;
+                padding: 10px;
+                border: solid 1px #fff;
             }
 
             #ui-status {
@@ -236,7 +243,7 @@
                 <div id="ui-auction-property-info">
                 </div>
                 <div id="ui-auction-bid-info">
-                    <h1>Huh</h1>
+                    <h1></h1>
                     <div id="ui-auction-bid-time"></div>
                     <div id="ui-auction-current-bid"></div>
                     <div id="ui-auction-highest-bidder"></div>
@@ -245,6 +252,9 @@
                     <input type="text" name="bid-amount" size="4">
                     <button id="bid-submit"> Bid </button>
                 </div>
+            </div>
+            <div id="ui-property-options">
+
             </div>
         </div>
 

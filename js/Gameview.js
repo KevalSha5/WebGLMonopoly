@@ -2,7 +2,7 @@ var scene;
 var camera;
 var controls;
 var renderer;
-var canvas;
+var webglcanvas;
 var boardDim;
 var objects = [];
 var playerId = 0;
@@ -606,24 +606,19 @@ function initGameView () {
     renderer.shadowMapSoft = true;
     renderer.setClearColor( 0x535353, 1 );
 
-    canvas = document.getElementById( 'gameView' );
-    canvas.appendChild( renderer.domElement );
+    webglcanvas = document.getElementById( 'gameView' );
+    webglcanvas.appendChild( renderer.domElement );
     
     var container = document.getElementById( "ui-wrapper" );
 
     //set controls
-    controls = new THREE.OrbitControls( camera );
+    controls = new THREE.OrbitControls( camera, container );
     controls.addEventListener( 'chance', render );    
     controls.target = new THREE.Vector3( boardDim / 2, 0, boardDim / 2 );
 
     var dLight1 = new THREE.DirectionalLight( 0xffffff, .30 );
     dLight1.position.set( boardDim, boardDim / .75, boardDim );
     scene.add( dLight1 );
-
-    // var dLight2 = new THREE.DirectionalLight( 0xffffff, .30 );
-    // dLight2.position.set( 0, boardDim / .75, 0 );
-    // dLight2.target.position.set( boardDim, 0, boardDim );
-    // scene.add( dLight2 );
 
     var aLight = new THREE.AmbientLight ( 0x9a9a9a );
     scene.add( aLight );
@@ -633,7 +628,7 @@ function initGameView () {
     setupBoard();
     startNextPlayerTurn();
 
-    // UI.auction( board.landableAreas[1] );
+    UI.auction( board.landableAreas[1] );
 }
 
 var eventListeners = {
