@@ -612,7 +612,7 @@ function initGameView () {
     var container = document.getElementById( "ui-wrapper" );
 
     //set controls
-    controls = new THREE.OrbitControls( camera, container );
+    controls = new THREE.OrbitControls( camera );
     controls.addEventListener( 'chance', render );    
     controls.target = new THREE.Vector3( boardDim / 2, 0, boardDim / 2 );
 
