@@ -1,10 +1,11 @@
 Utility.prototype = new GenericProperty();
 
 Utility.prototype.constructor = Utility;
-function Utility (name, cost, rent) {
+function Utility (name, cost, rentFactor) {
 	this.name = name;
 	this.cost = cost;
-	this.rent = rent;
+	this.rentFactor = [ 4, 10 ];
+	this.mortgageVal = 100;
 }
 
 Utility.prototype.payRent = function (player) {

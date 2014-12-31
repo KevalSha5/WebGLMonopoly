@@ -6,7 +6,21 @@ var board;
 
 function init() {
 
+    if (!String.prototype.format) {
+      String.prototype.format = function() {
+        var args = arguments;
+        return this.replace(/{(\d+)}/g, function(match, number) { 
+          return typeof args[number] != 'undefined'
+            ? args[number]
+            : match
+          ;
+        });
+      };
+    }
+
     board = new Board();    
+    // ui = new UI();
+    UI.init();
 
     addLandableAreas();
     addPlayers();
@@ -32,8 +46,8 @@ function addLandableAreas() {
 	board.addLandableArea( new GenericLandableArea("Income Tax") );
     board.addLandableArea( new Railroad("Deeprun Tram\n Stormwind", 200, railroadRent) );
     board.addLandableArea( new Street("Deathknell", 100, 6, "#A8E2F8") );
-    board.addLandableArea( new Street("Brill", 100, 6, "#A8E2F8") );
 	board.addLandableArea( new GenericLandableArea("Chance") );
+    board.addLandableArea( new Street("Brill", 100, 6, "#A8E2F8") );
     board.addLandableArea( new Street("The Speculcher", 120, 8, "#A8E2F8") );
     
 

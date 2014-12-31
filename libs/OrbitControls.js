@@ -21,6 +21,7 @@
 //      controls.target.z = 150;
 // Simple substitute "OrbitControls" and the control should work as-is.
 
+
 THREE.OrbitControls = function ( object, domElement ) {
 
 	this.object = object;
@@ -60,7 +61,7 @@ THREE.OrbitControls = function ( object, domElement ) {
 	// How far you can orbit vertically, upper and lower limits.
 	// Range is 0 to Math.PI radians.
 	this.minPolarAngle = 0; // radians
-	this.maxPolarAngle = Math.PI; // radians
+	this.maxPolarAngle = Math.PI / 2; // radians
 
 	// Set to true to disable use of the keys
 	this.noKeys = false;

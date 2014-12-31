@@ -23,7 +23,7 @@ Bank.handleTransaction = function (reciever, payee, amount) {
 		payee.money -= amount;
 		reciever.money += amount;
 	} else {
-		alert("buyer payee does not have enough money");
+		alert(" payee does not have enough money");
 	}
 
 }
@@ -33,7 +33,8 @@ Bank.handleTransaction = function (reciever, payee, amount) {
 var updateInterval;
 Bank.auction = function ( property ) {
 
-
+	UI.auction( property );
+	return;
 
 	// PAUSE GUI / GAME
     $("#modal-background").toggleClass("active");

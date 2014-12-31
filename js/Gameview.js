@@ -2,19 +2,20 @@ var scene;
 var camera;
 var controls;
 var renderer;
-var container;
+var canvas;
 var boardDim;
 var objects = [];
 var playerId = 0;
 var player;
 var tooltip;
 var mouseCoord = {};
+var mouseMoved = false;
 var timeIdle = 0;
 var lastTime = new Date().getTime();
-var selectedObj = undefined;
+var mouseDownObj = undefined;
+var mouseUpObj = undefined;
 var lastIntersectedObjects = [];
 var intersectedObjets = [];
-var statusBox;
 var SCREEN_WIDTH, SCREEN_HEIGHT;
 
 var currentPlayer;
@@ -23,7 +24,7 @@ var moveAmount;
 function endPlayerTurn () {
 
     if ( !currentPlayer.hasMoved ) {
-        statusBox.innerHTML = currentPlayer.name + " still needs to move ";
+        UI.alert( currentPlayer.name + " still needs to move !!!" );
         return;
     }
 
@@ -35,9 +36,8 @@ function startNextPlayerTurn () {
 
     currentPlayer = board.players[ board.turn % board.players.length ];
     currentPlayer.hasMoved = false;
-    statusBox.innerHTML = currentPlayer.name + "'s turn. Roll the die or develop.";
+    UI.status( currentPlayer.name + "'s turn. Roll the die or develop." );
     board.turn++;
-
     // moveAmount = board.rollDie();
     // console.log( currentPlayer.name + "s turn, rolled: " + moveAmount )
 
@@ -45,19 +45,8 @@ function startNextPlayerTurn () {
 
 function onMouseMove ( e ) {
 
-    var x, y;
-
-    if (e.offsetX !== undefined) {
-        x = e.offsetX;
-        y = e.offsetY;
-    } else {
-        x = e.layerX;
-        y = e.layerY;
-    }
-
-    //for use in update()
-    mouseCoord.x = x;
-    mouseCoord.y = y;
+    var x = e.clientX;
+    var y = e.clientY;
 
     var mouseVector = new THREE.Vector3 (
              (x / renderer.domElement.width) * 2 - 1,
@@ -75,6 +64,18 @@ function onMouseMove ( e ) {
     lastIntersectedObjects = intersectedObjets;
     intersectedObjets = raycaster.intersectObjects( objects );
 
+
+    //for use in onMouseUp()
+    mouseMoved = true;
+    
+    //for use in update()
+    mouseCoord.x = x;
+    mouseCoord.y = y;
+
+    UI.pos.x = x;
+    UI.pos.y = y;
+
+    //for use in update()
     lastTime = new Date().getTime();
 
     //to cope with fast mouse movement
@@ -83,44 +84,52 @@ function onMouseMove ( e ) {
 
 function onMouseDown ( e ) {
 
+    mouseMoved = false;
+
     if ( intersectedObjets.length > 0 ) {
 
-        var objGameRep = intersectedObjets[0].object.gameRep;
+        var mouseDownObjGameRep = intersectedObjets[0].object.gameRep;
 
-        if ( objGameRep instanceof Player ) {
+        if ( mouseDownObjGameRep instanceof Player ) {
 
-            selectedObj = intersectedObjets[0];
-            selectedObj.object.originalPos = selectedObj.object.position.clone();
+            console.log( "token selected" );
+             
+            mouseDownObj = intersectedObjets[0];
+            mouseDownObj.object.originalPos = mouseDownObj.object.position.clone();
             controls.noRotate = true;
 
-        } else if ( objGameRep instanceof Die ) {
+        } else if ( mouseDownObjGameRep instanceof Die ) {
 
-            selectedObj = intersectedObjets[0];
+            mouseDownObj = intersectedObjets[0];
 
-        } else if ( objGameRep == "End Turn" ) {
+        } else if ( mouseDownObjGameRep instanceof GenericProperty ) {
+
+            mouseDownObj = intersectedObjets[0];
+
+        }else if ( mouseDownObjGameRep == "End Turn" ) {
 
             endPlayerTurn();
 
         } else {
 
-            selectedObj = undefined;
+            mouseDownObj = undefined;
 
         }
+    }
 }
 
 function onMouseUp ( e ) {
 
-    if ( selectedObj !== undefined ) {
+    if ( mouseDownObj !== undefined ) {
 
-        var objGameRep = selectedObj.object.gameRep;
+        mouseUpObj = intersectedObjets[0];
 
-        if ( objGameRep instanceof  Player ) {
+        var mouseDownObjGameRep = mouseDownObj.object.gameRep;
 
-            console.log( "token selected" );
-             
-            var destLand = board.landableAreas[ objGameRep.dest ];
-    
-            var tokenCenter = selectedObj.object.position;
+        if ( mouseDownObjGameRep instanceof  Player ) {
+
+            var destLand = board.landableAreas[ mouseDownObjGameRep.dest ];    
+            var tokenCenter = mouseDownObj.object.position;
             var destDim = destLand.dimensions;
     
             var landIsValid = tokenCenter.x < destDim.xMid + destDim.width  / 2 &&
@@ -131,9 +140,9 @@ function onMouseUp ( e ) {
     
              if ( landIsValid ) {
     
-                if ( objGameRep.pos != objGameRep.dest ) {
+                if ( mouseDownObjGameRep.pos != mouseDownObjGameRep.dest ) {
     
-                    var selectedPlayer = objGameRep;
+                    var selectedPlayer = mouseDownObjGameRep;
     
                     board.landableAreas[ selectedPlayer.dest ].land( selectedPlayer )
                     selectedPlayer.pos = selectedPlayer.dest;
@@ -144,24 +153,32 @@ function onMouseUp ( e ) {
 
             } else {
     
-                console.log( "resetting pos", selectedObj.object.originalPos );
-                selectedObj.object.position.copy( selectedObj.object.originalPos );
+                console.log( "resetting pos", mouseDownObj.object.originalPos );
+                mouseDownObj.object.position.copy( mouseDownObj.object.originalPos );
             }
 
-        } else if ( objGameRep instanceof Die ) {
+        } else if ( mouseDownObjGameRep instanceof GenericProperty ) {
+
+            if ( !mouseMoved ) {
+
+                console.log( "UI Property Options" );
+
+            }
+
+        } else if ( mouseDownObjGameRep instanceof Die ) {
 
             console.log(" Rolling Die " );
 
             if ( currentPlayer.hasMoved ) {
 
-                statusBox.innerHTML = "Already moved. Can't roll again :\\";
+                UI.status( "Already moved. Can't roll again :\\" );
 
             } else {
 
                 moveAmount = board.die.roll();
                 currentPlayer.dest = (currentPlayer.pos + moveAmount) %
                 board.landableAreas.length;
-                statusBox.innerHTML = currentPlayer.name + " moves " + moveAmount + " spaces.";
+                UI.status( currentPlayer.name + " moves " + moveAmount + " spaces." );
 
             }
 
@@ -169,15 +186,36 @@ function onMouseUp ( e ) {
 
     }
 
-    selectedObj = undefined;
+    mouseDownObj = undefined;
     controls.noRotate = false;
     update();
+
+}
+
+function onClick ( e ) {
+    console.log( " :O " );
+}
+
+function onDoubleClick ( e ) {
+
+    if ( intersectedObjets.length > 0 ) {
+
+        var mouseDownObjGameRep = intersectedObjets[0].object.gameRep;
+
+        if ( mouseDownObjGameRep instanceof GenericProperty ) {
+            
+            console.log( "Develop ops" )
+            
+        }
+        
+    }
 
 }
 
 function update () {
 
     controls.update();
+    UI.update();
 
     timeIdle = new Date().getTime() - lastTime;
     // console.log( timeIdle );    
@@ -192,46 +230,40 @@ function update () {
             hoveredItemsChanged = true;
 
 
-    // if ( timeIdle > 500 ) {
+    // if ( timeIdle > 5000 || !hoveredItemsChanged ) UI.showTooltip = true;
+    // else UI.showTooltip = false;
 
-    //     if ( intersectedObjets.length > 0)
-    //          if ( intersectedObjets[0].object.gameRep instanceof GenericLandableArea )
-    //             fillTooltipLandableArea( intersectedObjets[0].object.gameRep )
-    //         else if ( intersectedObjets[0].object.gameRep instanceof Player )
-    //             fillTooltipPlayer( intersectedObjets[0].object.gameRep )
-
-    //     $("#tooltip").show();
-    //     $("#tooltip").offset( { left: mouseCoord.x + 40 , top:  mouseCoord.y - 200 - 40 } ); 
-
-    // } else if (hoveredItemsChanged) {
-
-    //     $("#tooltip").hide();
-
-    // }
+    if ( timeIdle > 250 ) UI.showTooltip = true;
+    else if ( UI.showTooltip && !hoveredItemsChanged && intersectedObjets.length > 0) UI.showTooltip = true;
+    else UI.showTooltip = false;
 
     if ( !hoveredItemsChanged ) return;
 
-    if ( selectedObj !== undefined && intersectedObjets.length > 1 ) {
-        /*
-            This means token is selected, and as long mouse intersects
-            at least two items (one is token) update the token pos
-        */
+    if ( mouseDownObj !== undefined && intersectedObjets.length > 1 ) {
 
-        var ground;
-        for ( var i = 0; i < intersectedObjets.length; i++ )
-            if ( intersectedObjets[i].object.gameRep instanceof GenericLandableArea ) {
-                ground = intersectedObjets[i];
-                break;            
-            }
-        selectedObj.object.position.x = ground.point.x;
-        selectedObj.object.position.z = ground.point.z;
+        if ( mouseDownObj.object.gameRep instanceof Player ) {
+            /*
+                This means token is selected, and as long mouse intersects
+                at least two items (one is token) update the token pos
+            */
+    
+            var ground;
+            for ( var i = 0; i < intersectedObjets.length; i++ )
+                if ( intersectedObjets[i].object.gameRep instanceof GenericLandableArea ) {
+                    ground = intersectedObjets[i];
+                    break;            
+                }
+            mouseDownObj.object.position.x = ground.point.x;
+            mouseDownObj.object.position.z = ground.point.z;
+        
+        }
     }
 
 
 
     if ( intersectedObjets.length > 0 ) {
 
-
+        UI.tooltip( intersectedObjets[0].object.gameRep );
 
         player.outline.visible = true;
         player.outline.geometry = intersectedObjets[0].object.geometry.clone();
@@ -240,47 +272,12 @@ function update () {
 
     } else {
 
+        UI.tooltip( "" );
         player.outline.visible = false;
     }   
 
 }
 
-function fillTooltipLandableArea ( landableArea ) {
-
-    //clear the tooltip
-    $("#tooltip").html("");
-    $("#tooltip").removeClass();    
-
-    if (landableArea instanceof Street) {
-        $("#tooltip").html("<p>" + landableArea.name + "</p>");
-        $("#tooltip").addClass("Street");
-
-    } else if (landableArea instanceof Railroad) {
-        $("#tooltip").html("<p>" + landableArea.name + "</p>");
-        $("#tooltip").addClass("Railroad");
-
-    } else if (landableArea instanceof Utility) {
-        $("#tooltip").html("<p>" + landableArea.name + "</p>");
-        $("#tooltip").addClass("Utility");
-
-    } else if (landableArea instanceof GenericLandableArea) {
-        $("#tooltip").html("<p>" + landableArea.name + "</p>");
-        $("#tooltip").addClass("GenericLandableArea"); //probably not proper to call this "generalland..."
-    }
-
-}
-
-function fillTooltipPlayer( player ) {
-
-    //clear the tooltip
-    $("#tooltip").html("");
-    $("#tooltip").removeClass();
-
-
-    $("#tooltip").html("<p>" + player.name + "</p>");
-    $("#tooltip").addClass("Player");
-
-}
 
 function objsIdenticalUuid ( array1, array2 ) {
 
@@ -550,6 +547,7 @@ function setupBoard () {
         tokenMesh.position.z = board.landableAreas[0].dimensions.yMid;
 
         tokenMesh.gameRep = board.players[i];
+
         player.token = tokenMesh;
         objects.push(tokenMesh );
         scene.add( tokenMesh );
@@ -608,19 +606,14 @@ function initGameView () {
     renderer.shadowMapSoft = true;
     renderer.setClearColor( 0x535353, 1 );
 
-    container = document.getElementById( 'gameView' );
-    container.appendChild( renderer.domElement );
+    canvas = document.getElementById( 'gameView' );
+    canvas.appendChild( renderer.domElement );
     
+    var container = document.getElementById( "ui-wrapper" );
 
     //set controls
-    controls = new THREE.OrbitControls( camera );
-    controls.addEventListener( 'chance', render );
-    // var delta = {};
-    // delta.x = 0;
-    // delta.y = -500;
-    // controls.pan( delta );
-    // controls.noPan = true;
-    // controls.scope = container;
+    controls = new THREE.OrbitControls( camera, container );
+    controls.addEventListener( 'chance', render );    
     controls.target = new THREE.Vector3( boardDim / 2, 0, boardDim / 2 );
 
     var dLight1 = new THREE.DirectionalLight( 0xffffff, .30 );
@@ -635,17 +628,38 @@ function initGameView () {
     var aLight = new THREE.AmbientLight ( 0x9a9a9a );
     scene.add( aLight );
 
-    console.log(board.landableAreas)
-    container.addEventListener( 'mousemove', onMouseMove, false );
-    container.addEventListener( 'mousedown', onMouseDown, false );
-    container.addEventListener( 'mouseup', onMouseUp, false );
 
-    statusBox = document.getElementById("statusBox");
-
-
+    addListeners();
     setupBoard();
-
     startNextPlayerTurn();
+
+    // UI.auction( board.landableAreas[1] );
+}
+
+var eventListeners = {
+    "mousemove": onMouseMove,
+    "mousedown": onMouseDown,
+    "mouseup"  : onMouseUp,
+    "dblclick" : onDoubleClick
+}
+
+function removeListeners () {
+    for ( var key in eventListeners )
+        window.removeEventListener( key, eventListeners[ key ] );
+}
+
+function addListeners () {
+    for ( var key in eventListeners )
+        window.addEventListener( key, eventListeners[ key ] );
+}
+
+function getControlValues () {
+    console.log( controls.phiDelta )
+    // return {phiDelta: controls.noPan, thetaDelta: controls.thetaDelta, scale: controls.scale}
+}
+
+function compareControlValues () {
+
 }
 
 function animate () {

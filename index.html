@@ -22,8 +22,9 @@
 
         <!-- scripts -->
         <script src="js/logic.js"></script>
-        <script src="js/gameview.js"></script>
+        <script src="js/Gameview.js"></script>
         <script src="js/main.js"></script>
+        <script src="js/UI.js"></script>
 
         <!-- theme -->
         <script src="themes/warcraft/theme.js"></script>   
@@ -35,157 +36,192 @@
                 padding: 0;
             }
 
-            #statusBox {
-                z-index: 1;
+            #ui-wrapper {
+                width: 100%;
+                height: 100%;
                 position: fixed;
-                width: 75%;
-                height: 60;
-                display: block;
-                left: 50%;
-                margin: 15 0 0 -37.5%;
-                background-color: rgba( 223, 134, 235, .5 );
-                border: 1 solid black;
-                text-align: center;
-                color: white;
-                height: 60;
-                line-height: 60px;
+                z-index: 1000;
             }
 
-            #modal-background {
+            #ui-modal-wrapper {
                 display: none;
                 position: fixed;
                 top: 0;
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background-color: black;
-                opacity: .50;
-                -webkit-opacity: .5;
-                -moz-opacity: .5;
-                filter: alpha(opacity=50);
-                z-index: 1000;
+                background-color: rgba(35, 35, 35, .4);
+                z-index: 1001;
             }
-
-            #modal-auction-window {
-                 box-sizing:border-box;
-                -moz-box-sizing:border-box;
-                -webkit-box-sizing:border-box;
-                background-color: black;
-                border: 5 solid #cea23b;
-                width: 750;
-                height: 500;
-                left: 50%;
-                top: 50%;
-                margin-left: -375;
-                margin-top: -250;
-                position: fixed;
+            #ui-auction-window {
+                margin: 150 auto;
                 display: none;
-                z-index: 1000;
-            }
-
-            #auction-window-prop-info {
-                top: 75;
-                left: 50;
-                width: 300;
-                height: 350;
-                margin: 0;
+                background-color: #343434;
+                border: 2px solid #cea23b;
                 padding: 0;
-                background-color: white;
-                position: absolute;
-                display: block;
-                z-index: 1000;
+                width: 700;
+                height: 500;
+                z-index: 1001;
             }
 
-            #auction-window-bid-info {
-                top: 75;
-                right: 50;
-                width: 300;
-                height: 150;
-                background-color: white;
-                position: absolute;
-                display: block;
-                z-index: 1000;
+            #ui-auction-property-info {
+                float: left;
+                width: 325;
             }
 
-            #auction-window-bid-controls {
-                top: 275;
-                right: 50;
-                width: 300;
-                height: 150;
-                background-color: white;
-                position: absolute;
-                display: block;
-                z-index: 1000;
+            #ui-auction-bid-info {
+                float: right;
+                width: 325;
+                color: white;
             }
 
-            #modal-background.active, #modal-auction-window.active {
-                display: block;
-            }​
+            #ui-auction-bid-control {
+                float: right;
+                width: 325;
+                color: white;
+            }
 
-            #statusBox:first-child {
-                color: black;
+            #ui-auction-bid-control input[type="text"] {
+              padding: 10px;
+              border: solid 1px #fff;
+              box-shadow: inset 1px 1px 2px 0 #707070;
+              transition: box-shadow 0.3s;
+            }
+            #ui-auction-bid-control input[type="text"]:focus,
+            #ui-auction-bid-control input[type="text"].focus {
+              box-shadow: inset 1px 1px 2px 0 #c9c9c9;
+            }
+
+            #ui-status {
                 position: relative;
+                width: 600;
+                height: 40;
+                display: block;
+                margin: 20 auto;
+                background-color: rgba( 137, 137, 137, .5 );
+                border: 1 solid black;
+                text-align: center;
+                color: white;
+                text-shadow: 1px -1px 0 #555,  
+                             1px -1px 0 #555,
+                            -1px  1px 0 #555,
+                             1px  1px 0 #555;
+                height: 60;
+                line-height: 60px;
+            }
+
+            #ui-alert-box {
+                position: relative;
+                width: 500;
+                height: auto;
+                background-color: transparent;
+                text-align: center;
+                margin: 0 auto;
+            }
+
+            .ui-alert-msg {
+                text-shadow: 0px  2px 6px rgba(0, 0, 0, 0.75),
+                            -1px -1px 0 #000,  
+                             1px -1px 0 #000,
+                            -1px  1px 0 #000,
+                             1px  1px 0 #000;
+                color: #FF4E00;
+                font-size: 20;  
+            }
+
+            #ui-tooltip {
+                margin:  0;
+                padding: 0;
+                position: fixed;  
+                display: none; 
+                background-color: white;            
+                color: black;
+            }
+
+            .ui-content-generic-property {
+                margin: 0;
+                padding: 5;
+                border: 0 solid black;
+                background-color: transparent;
+                width:   220;
+                height:  270;
+            }
+
+            .ui-content-railroad {
+                margin: 0 auto;
+                border: 3 solid black;
+                position: relative;
+                width: 215;
+                height: 265;
+                background-color: white;                
+            }
+
+            .ui-content-railroad table{
+                width: 185;
+                margin: 0 auto;
+                font-style: bold;
+            }
+
+
+            .ui-content-street {
+                margin: 0 auto;
+                border: 3 solid black;
+                position: relative;
+                width: 215;
+                height: 265;
+                background-color: white;
+            }
+
+            .ui-content-street-name-wrapper {
+                background-color: transparent;
+                position: relative;
+                margin: 0 auto;
+                margin-top: 8px;
+                width: 185;
+                height: 50;
+                color: black;
+                text-transform: uppercase;
+                border: 2 solid black;  
+                line-height: .95em;
+                vertical-align: middle;              
+                text-align: center;
+            }
+
+            .ui-content-street h1 {
+                font-family: Lucida Sans Unicode;
+                padding-top: 2;
+                letter-spacing: 1.2px;
+                /*line-height: .95em;*/
+                font-size: .9em;
+            }
+
+            .ui-content-street h2 {
+                font-family: Verdana;
+                padding-top: 2;
+                letter-spacing: 1.8px;
+                /*line-height: .7em;*/
+                font-size: .7em;
+            }
+
+            .ui-content-street-pricing {
+                font-size: .8em;
+
+            }
+
+            .ui-content-street table{
+                /*font-size: .8em;*/
+                width: 185;
+                margin: 0 auto;
+                font-style: bold;
             }
 
             #gameView {
-                width: 90%;
-                height: 90%;
-            }
-
-            #tooltip {
-                margin:  0;
-                padding: 5;
-                z-index: 1;
-                position: fixed;  
-                display: none;             
-                color: red;
-                color: black;
-            }
-
-            #tooltip p {
-                padding: 5;
-            }
-
-            .Street {
-                border: 5 solid black;
-                background-color: white;
-                width:   175;
-                height:  200;
-            }
-
-            .Railroad {
-                border: 5 solid black;
-                background-color: #343434;
-                width:   175;
-                height:  200;
-                color: white;
-            }
-
-            .Railroad p {
-                color: white;
-            }
-
-
-            .Utility {
-                border: 5 solid black;
-                background-color: #238989;
-                width:   175;
-                height:  200;
-            }
-
-            .GenericLandableArea {
-                border: 5 solid #cea23b;
-                background-color: #238989;
-                width:   175;
-                height:  25;
-            }
-
-            .Player {
-                border: 0;
-                background-color: transparent;
-                color: 5;
-                width:   175;
-                height:  25;                
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                top: 0;
+                left: 0;
+                /*position: static;*/
             }
             
         </style>
@@ -193,21 +229,33 @@
     </head>
 
     <body>
-        <div id="modal-background"></div>
-        <div id="modal-auction-window">
-            <div id="auction-window-prop-info"></div>
-            <div id="auction-window-bid-info"></div>
-            <div id="auction-window-bid-controls">
-                <button id="auction-window-button-increase-bid">Increase Bid</button>
+
+
+        <div id="ui-modal-wrapper">
+            <div id="ui-auction-window">
+                <div id="ui-auction-property-info">
+                </div>
+                <div id="ui-auction-bid-info">
+                    <h1>Huh</h1>
+                    <div id="ui-auction-bid-time"></div>
+                    <div id="ui-auction-current-bid"></div>
+                    <div id="ui-auction-highest-bidder"></div>
+                </div>
+                <div id="ui-auction-bid-control">
+                    <input type="text" name="bid-amount" size="4">
+                    <button id="bid-submit"> Bid </button>
+                </div>
             </div>
-
-            <button id="auction-window-button-leave">Opt-out</button>
-
         </div>
-        <div id="tooltip">testing the tooltip</div>
-        <div id='statusBox'></div>
-        <div id="gameView"></div>
-        <button onClick="board.playerTurn()"> Player Turn </button>
+
+
+        <div id="ui-wrapper">
+            <div id='ui-status'></div>
+            <div id="ui-alert-box"></div>
+            <div id="ui-tooltip">You should not be seeing this.</div>
+            <div id="gameView"></div>
+        </div>
+
     </body>
 
 

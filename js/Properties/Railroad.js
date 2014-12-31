@@ -4,7 +4,8 @@ Railroad.prototype.constructor = Railroad;
 function Railroad (name, cost, rent) {
 	this.name = name;
 	this.cost = cost;
-	this.rent = rent;
+	this.rent = [25, 50, 100, 200];
+	this.mortgageVal = 150;
 }
 
 Railroad.prototype.payRent = function (player) {
