@@ -11,6 +11,7 @@ UI.init = function () {
 
 UI.alert = function ( msg ) {
 
+	// need destroyElement() ???
 	var alert = $("<div/>").addClass("ui-alert-msg").text( msg ).show().delay( 2000 ).fadeOut( 1500, destroyElement );
 	$( "#ui-alert-box" ).append( alert );
 
@@ -30,8 +31,35 @@ UI.tooltip = function ( obj ) {
 
 }
 
-UI.propertyOptions = function ( obj ) {
-	
+UI.propertyOptions = function ( property ) {
+
+	$("#ui-modal-wrapper").show();
+	$("#ui-property-options").show();
+	removeListeners();
+
+	if ( player == property.owner ) {
+		$("#ui-property-options").text("Showing developmental options");
+		
+	}
+
+	var okButton = $("#ui-property-options").find(":button").bind( "click", function () {
+
+		$("#ui-modal-wrapper").hide();
+		$("#ui-property-options").hide();
+		addListeners();
+
+	});
+
+
+
+
+	// if owned by player
+		// add hotel/house option
+		// sell hotel/house option
+		// mortgage option
+	// else
+		// offer option
+
 }
 
 UI.auction = function ( property ) {
@@ -39,7 +67,7 @@ UI.auction = function ( property ) {
 	removeListeners();
 	$("#ui-modal-wrapper").fadeIn(1000);
 	$("#ui-auction-window").fadeIn(1500);
-	$("#ui-auction-window").addClass("ui-window");
+	// $("#ui-auction-window").addClass("ui-window");
 
 	fillContent( $("#ui-auction-property-info"), property );
 	/*

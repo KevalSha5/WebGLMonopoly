@@ -162,6 +162,7 @@ function onMouseUp ( e ) {
             if ( !mouseMoved ) {
 
                 console.log( "UI Property Options" );
+                UI.propertyOptions( mouseDownObjGameRep );
 
             }
 
@@ -628,7 +629,7 @@ function initGameView () {
     setupBoard();
     startNextPlayerTurn();
 
-    UI.auction( board.landableAreas[1] );
+    // UI.auction( board.landableAreas[1] );
 }
 
 var eventListeners = {

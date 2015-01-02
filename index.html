@@ -43,6 +43,17 @@
                 z-index: 1000;
             }
 
+            #ui-property-options {
+                margin: 75 auto;
+                display: none;
+                background-color: #343434;
+                border: 2px solid #cea23b;
+                padding: 0;
+                width: 700;
+                height: 500;
+                z-index: 1001;
+            }
+
             #ui-modal-wrapper {
                 display: none;
                 position: fixed;
@@ -53,6 +64,7 @@
                 background-color: rgba(35, 35, 35, .4);
                 z-index: 1001;
             }
+
             #ui-auction-window {
                 margin: 150 auto;
                 display: none;
@@ -88,6 +100,7 @@
               box-shadow: inset 1px 1px 2px 0 #707070;
               transition: box-shadow 0.3s;
             }
+
             #ui-auction-bid-control input:focus,
             #ui-auction-bid-control input.focus {
               box-shadow: inset 1px 1px 2px 0 #c9c9c9;
@@ -250,11 +263,12 @@
                 </div>
                 <div id="ui-auction-bid-control">
                     <input type="text" name="bid-amount" size="4">
+                    <!-- TODO - need button id ? -->
                     <button id="bid-submit"> Bid </button>
                 </div>
             </div>
             <div id="ui-property-options">
-
+                <button> Ok </button>
             </div>
         </div>
 
