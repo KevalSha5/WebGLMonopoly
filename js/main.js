@@ -6,6 +6,7 @@ var board;
 
 function init() {
 
+    // Need to put this else where
     if (!String.prototype.format) {
       String.prototype.format = function() {
         var args = arguments;
@@ -17,12 +18,18 @@ function init() {
         });
       };
     }
+    //----------------------
 
     board = new Board();    
     // ui = new UI();
     UI.init();
 
-    addLandableAreas();
+    loadBoardTheme();
+    // addLandableAreas();
+    // exportCurrentTheme();
+
+    console.log( board.landables )
+
     addPlayers();
     addDie();
 
@@ -31,6 +38,46 @@ function init() {
     startGameView();
 
     // board.playerTurn();
+
+}
+
+function exportCurrentTheme () {
+
+    var boardTheme = {};
+    boardTheme.info = null;
+    boardTheme.landables = [];
+
+    for ( var i in board.landables ) {
+
+        boardTheme.landables[i] = {};
+
+        var type = board.landables[i].constructor.name.toString();
+        boardTheme.landables[i].type = type;
+
+        for ( var key in board.landables[i] ) {
+            if ( board.landables[i].hasOwnProperty( key ) )
+                boardTheme.landables[i][key] = board.landables[i][key];
+        }
+    }
+
+    localStorage.setItem("theme", JSON.stringify(boardTheme));
+}
+
+function loadBoardTheme () {
+
+    var uL = boardtheme.landables; //unthemed landable ( from theme.js )
+    var tL; // themed landable
+
+    for ( var i in uL ) {
+
+        tL = new window[ uL[i].type ]
+
+        for ( var key in uL[i] )
+            if ( uL[i].hasOwnProperty( key ) )
+                tL[key] = uL[i][key];
+
+        board.addLandableArea( tL );
+    }
 
 }
 

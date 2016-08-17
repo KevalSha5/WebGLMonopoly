@@ -37,12 +37,11 @@ UI.propertyOptions = function ( property ) {
 	$("#ui-property-options").show();
 	removeListeners();
 
-	if ( player == property.owner ) {
-		$("#ui-property-options").text("Showing developmental options");
-		
-	}
+	// reset buttons
+	$("#ui-property-option-buttons").empty();
 
-	var okButton = $("#ui-property-options").find(":button").bind( "click", function () {
+	// button for all 
+	var okButton = $("<button> OK </button>").bind( "click", function () {
 
 		$("#ui-modal-wrapper").hide();
 		$("#ui-property-options").hide();
@@ -50,9 +49,24 @@ UI.propertyOptions = function ( property ) {
 
 	});
 
+	okButton.appendTo( $("#ui-property-option-buttons") );
+
+	//buttons for property owned by this player
+	var addHouse = $("<button> Add House </button>");
+
+	var addHotel = $("<button> Add Hotel </button>");
 
 
+	if ( player == property.owner ) {
 
+		$("#ui-property-options").append("Showing developmental options");
+
+		addHouse.appendTo( $("#ui-property-option-buttons") );
+		addHotel.appendTo( $("#ui-property-option-buttons") );
+		
+	}
+
+	
 	// if owned by player
 		// add hotel/house option
 		// sell hotel/house option
@@ -167,50 +181,50 @@ function fillWithStreet ( element, street ) {
 	streetNameDiv.append( "<h1>" + street.name + "</h1>")
 	streetNameDiv.css("background-color",street.color);
 
-
 	streetDiv.append( streetNameDiv );
-	/*
-		TODO - Instead of using append() below to change the html,
-		use pure jQuery ( like it's done in fillWithRailroad()
-		& fillWithUtility() to change the html)
-	*/
-	streetDiv.append( 
-		"<table>" +
+	
+	var table, row;
+	table = $("<table></table>").appendTo( streetDiv );
 
-			"<tr>" +
-				"<td align='center' colspan='2'>" + "RENT: $" + street.rent[0] + "</td>" +
-			"</tr>" +
-			"<tr>"  +
-				"<td align='left'>"  + "With 1 House:"      + "</td>" +
-				"<td align='right'>" + "$" + street.rent[1] + "</td>" +
-			"</tr>" +
-			"<tr>"  +
-				"<td align='left'>"  + "With 2 Houses:"      + "</td>" +
-				"<td align='right'>" + " " + street.rent[2]  + "</td>" +
-			"</tr>" +
-			"<tr>"  +
-				"<td align='left'>"  + "With 3 Houses:"      + "</td>" +
-				"<td align='right'>" + " " + street.rent[3]  + "</td>" +
-			"</tr>" +
-			"<tr>"  +
-				"<td align='left'>"  + "With 4 Houses:"      + "</td>" +
-				"<td align='right'>" + " " + street.rent[4]  + "</td>" +
-			"</tr>" +
-			"<tr>" +
-				"<td align='center' colspan='2'>" + "With HOTEL: $" + street.rent[5] + "</td>" +
-			"</tr>" +
-			"<tr>" +
-				"<td align='center' colspan='2'>" + "Mortgage Value: $" + street.mortgageVal + "</td>" +
-			"</tr>" +
-			"<tr>" +
-				"<td align='center' colspan='2'>" + "Houses Cost: $" + street.houseCost + " each" + "</td>" +
-			"</tr>" +
-			"<tr>" +
-				"<td align='center' colspan='2'>" + "Hotels, $" + street.houseCost + " plus 4 houses" + "</td>" +
-			"</tr>" +
+	row = $("<tr></tr>");
+	$("<td></td>").attr( { align: "center", colspan: "2" } ).text( "RENT: $" + street.rent[0] ).appendTo( row );
+	row.appendTo( table );
 
-		"</table>"
-	);
+	row = $("<tr></tr>");
+	$("<td></td>").attr( { align: "left" } ).text( "With 1 House:" ).appendTo( row );
+	$("<td></td>").attr( { align: "right" } ).text( "$" + street.rent[1] ).appendTo( row );
+	row.appendTo( table );
+
+	row = $("<tr></tr>");
+	$("<td></td>").attr( { align: "left" } ).text( "With 2 Houses:" ).appendTo( row );
+	$("<td></td>").attr( { align: "right" } ).text( "$" + street.rent[2] ).appendTo( row );
+	row.appendTo( table );
+
+	row = $("<tr></tr>");
+	$("<td></td>").attr( { align: "left" } ).text( "With 3 Houses:" ).appendTo( row );
+	$("<td></td>").attr( { align: "right" } ).text( "$" + street.rent[3] ).appendTo( row );
+	row.appendTo( table );
+
+	row = $("<tr></tr>");
+	$("<td></td>").attr( { align: "left" } ).text( "With 4 Houses:" ).appendTo( row );
+	$("<td></td>").attr( { align: "right" } ).text( "$" + street.rent[4] ).appendTo( row );
+	row.appendTo( table );
+
+	row = $("<tr></tr>");
+	$("<td></td>").attr( { align: "center", colspan: "2" } ).text( "With HOTEL: $" + street.rent[5] ).appendTo( row );
+	row.appendTo( table );
+
+	row = $("<tr></tr>");
+	$("<td></td>").attr( { align: "center", colspan: "2" } ).text( "Mortgage Value: $" + street.mortgageVal ).appendTo( row );
+	row.appendTo( table );
+
+	row = $("<tr></tr>");
+	$("<td></td>").attr( { align: "center", colspan: "2" } ).text( "Houses Cost: $" + street.houseCost + " each" ).appendTo( row );
+	row.appendTo( table );
+
+	row = $("<tr></tr>");
+	$("<td></td>").attr( { align: "center", colspan: "2" } ).text( "Hotels, $" + street.houseCost + " plus 4 houses" ).appendTo( row );
+	row.appendTo( table );
 
 	genPropDiv.append( streetDiv );
 	element.append( genPropDiv );

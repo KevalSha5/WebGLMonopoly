@@ -36,6 +36,7 @@ function startNextPlayerTurn () {
 
     currentPlayer = board.players[ board.turn % board.players.length ];
     currentPlayer.hasMoved = false;
+    currentPlayer.hasRolled = false;
     UI.status( currentPlayer.name + "'s turn. Roll the die or develop." );
     board.turn++;
     // moveAmount = board.rollDie();
@@ -128,9 +129,9 @@ function onMouseUp ( e ) {
 
         if ( mouseDownObjGameRep instanceof  Player ) {
 
-            var destLand = board.landableAreas[ mouseDownObjGameRep.dest ];    
+            var destLand = board.landables[ mouseDownObjGameRep.dest ];    
             var tokenCenter = mouseDownObj.object.position;
-            var destDim = destLand.dimensions;
+            var destDim = destLand.dim;
     
             var landIsValid = tokenCenter.x < destDim.xMid + destDim.width  / 2 &&
                               tokenCenter.x > destDim.xMid - destDim.width  / 2 &&
@@ -144,7 +145,7 @@ function onMouseUp ( e ) {
     
                     var selectedPlayer = mouseDownObjGameRep;
     
-                    board.landableAreas[ selectedPlayer.dest ].land( selectedPlayer )
+                    board.landables[ selectedPlayer.dest ].land( selectedPlayer )
                     selectedPlayer.pos = selectedPlayer.dest;
                     selectedPlayer.hasMoved = true;
                     console.log( "Valid Land!")
@@ -168,17 +169,20 @@ function onMouseUp ( e ) {
 
         } else if ( mouseDownObjGameRep instanceof Die ) {
 
-            console.log(" Rolling Die " );
-
             if ( currentPlayer.hasMoved ) {
 
-                UI.status( "Already moved. Can't roll again :\\" );
+                UI.alert( "Already moved. Can't roll again :\\" );
+
+            } else if ( currentPlayer.hasRolled ) {
+
+                UI.alert( "Already rolled. Can't roll again :\\")
 
             } else {
 
                 moveAmount = board.die.roll();
+                currentPlayer.hasRolled = true;
                 currentPlayer.dest = (currentPlayer.pos + moveAmount) %
-                board.landableAreas.length;
+                board.landables.length;
                 UI.status( currentPlayer.name + " moves " + moveAmount + " spaces." );
 
             }
@@ -311,7 +315,7 @@ function setupBoard () {
     var rotation = 0;
 
     // used to rotate width & height
-    var lAreaRot;
+    var tempRotation;
     var width, height, temp;
 
 
@@ -321,22 +325,22 @@ function setupBoard () {
         width = (i % 10 == 0) ? maxDim : minDim;
         height = maxDim;
 
-        lAreaRot = rotation;        
-        while ( lAreaRot > 0 ) {
+        tempRotation = rotation;        
+        while ( tempRotation > 0 ) {
             temp = width;
             width = height;
             height = temp;
-            lAreaRot -= Math.PI / 2;
+            tempRotation -= Math.PI / 2;
         }
 
-        board.landableAreas[i].dimensions = {};
-        board.landableAreas[i].dimensions.xMid = xMid;
-        board.landableAreas[i].dimensions.yMid = yMid;
-        board.landableAreas[i].dimensions.width = width;
-        board.landableAreas[i].dimensions.height = height;
-        board.landableAreas[i].dimensions.rotation = rotation; 
+        board.landables[i].dim = {};
+        board.landables[i].dim.xMid = xMid;
+        board.landables[i].dim.yMid = yMid;
+        board.landables[i].dim.width = width;
+        board.landables[i].dim.height = height;
+        board.landables[i].dim.rotation = rotation; 
 
-        //for loop updates middle coordiante and rotation of each landable area
+        //update middle coordiante and rotation of each landable area
         if (i == 0) {           
             xMid -= avgDim;
             rotation = 0;
@@ -366,57 +370,41 @@ function setupBoard () {
         }
     }
 
-
-
-    // PLANE GEOMETRY
-    var material = new THREE.MeshPhongMaterial( { color: 0x00aaff } );
-    var geometry = new THREE.PlaneBufferGeometry( boardDim, boardDim );
-
-    var mesh = new THREE.Mesh( geometry, material );
-    mesh.rotation.x = -Math.PI / 2;
-    mesh.position.x = boardDim / 2;
-    mesh.position.z = boardDim / 2;
-    // scene.add( mesh );
-    // objects.push( mesh );
-
     
     // ALL THE LANDABLES
-    var lArea;
+    var landable;
     var height = 40;
+    
     for (var i = 0; i < 40; i++) {
 
-        lArea = board.landableAreas[i].dimensions;
+        landable = board.landables[i];
 
         //GET THE 2D CONTEXT
         var canvas = document.createElement( 'canvas' );
-        canvas.width  = lArea.width;
-        canvas.height = lArea.height;
+        canvas.width  = landable.dim.width;
+        canvas.height = landable.dim.height;
 
         var context = canvas.getContext( '2d' );
 
         // CREATE IMAGE FOR LANDALBE AREA
-
-        // context.stroke();
-
         context.fillStyle = "#CDE6D0"
         context.fillRect( 0, 0, canvas.width, canvas.height );
 
         context.save();
 
-        context.translate( lArea.width / 2, lArea.height / 2 )
-
-        context.rotate( lArea.rotation );
+        context.translate( landable.dim.width / 2, landable.dim.height / 2 )
+        context.rotate( landable.dim.rotation );
         if (i % 10 == 0) context.rotate( -Math.PI / 4 ); // rotate more for cornor areas
 
         var canvasXMid;
 
-        if ( lArea.rotation == Math.PI / 2 || lArea.rotation == 3 * Math.PI / 2){
-            context.translate( -lArea.height / 2, -lArea.width / 2 );
-            canvasXMid = lArea.height / 2;
+        if ( landable.dim.rotation == Math.PI / 2 || landable.dim.rotation == 3 * Math.PI / 2){
+            context.translate( -landable.dim.height / 2, -landable.dim.width / 2 );
+            canvasXMid = landable.dim.height / 2;
 
          } else {   
-             context.translate( -lArea.width / 2, -lArea.height / 2 );
-             canvasXMid = lArea.width / 2;
+             context.translate( -landable.dim.width / 2, -landable.dim.height / 2 );
+             canvasXMid = landable.dim.width / 2;
 
          }
 
@@ -424,18 +412,17 @@ function setupBoard () {
         var propColor;
 
         // FILL STREET COLOR
-        if ( board.landableAreas[i] instanceof Street) {
-            propColor = board.landableAreas[i].color;
+        if ( landable instanceof Street) {
+
+            // console.log( landable.color )
+
+            propColor = landable.color;
             context.fillStyle = propColor;
-            context.fillRect( 0, 0, lArea.width, 100 )
+            context.fillRect( 0, 0, landable.dim.width, 100 )
         } else {
-
             propColor = "#CDE6D0";
-
         }
 
-
-        // console.log( lArea.rotation );
 
         context.font = '27pt Calibri';
         context.textAlign = 'center';
@@ -443,35 +430,33 @@ function setupBoard () {
         context.textBaseline = "middle";
 
         
-        var name = board.landableAreas[i].name;
+        var name = landable.name;
         var lines = name.split("\n");
-        // console.log( lines.length )
-        // var line = "";
-
         var offset = 0;
-        if (board.landableAreas[i] instanceof Street) offset = 100;
+
+        if (landable instanceof Street) offset = 100;
 
         for ( var j = 0; j < lines.length; j++ ) {
 
-            context.fillText( lines[j], canvasXMid, offset + (40 * (j + 1)), lArea.width )
+            context.fillText( lines[j], canvasXMid, offset + (40 * (j + 1)), landable.dim.width )
 
         }
+        
 
         // PROPERTY PRICE
-        if ( board.landableAreas[i] instanceof GenericProperty ) {
+        if ( landable instanceof GenericProperty ) {
 
-            var bottom = lArea.height;
-            if ( lArea.rotation == Math.PI / 2 || lArea.rotation == 3 * Math.PI / 2)
-                bottom = lArea.width;
+            var bottom = landable.dim.height;
+            if ( landable.dim.rotation == Math.PI / 2 || landable.dim.rotation == 3 * Math.PI / 2)
+                bottom = landable.dim.width;
 
-            var cost = board.landableAreas[i].cost;
-            context.fillText( "$" + cost, canvasXMid, bottom - 30, lArea.width)
+            var cost = landable.cost;
+            context.fillText( "$" + cost, canvasXMid, bottom - 30, landable.dim.width)
 
         }
 
-        // context.fillText( board.landableAreas[i].name, canvasXMid, 50, lArea.width )
        
-        if (board.landableAreas[i] instanceof Street)
+        if (landable instanceof Street)
             context.rect( 0, 0, canvas.width, offset );
 
         context.restore();
@@ -483,7 +468,6 @@ function setupBoard () {
 
         // context.fill();
 
-
         var texture = new THREE.Texture( canvas );
         canvas.remove();
         texture.needsUpdate = true;
@@ -492,7 +476,7 @@ function setupBoard () {
         var backFaceMaterial = new THREE.MeshBasicMaterial( { color: propColor } );
         var defaultMaterial  = new THREE.MeshPhongMaterial( { color: 0x0a9a54 } );
 
-        materials = [
+        var materials = [
             defaultMaterial,
             defaultMaterial,
             mainFaceMaterial,
@@ -502,12 +486,12 @@ function setupBoard () {
         ];
 
         var backFaceIndex;
-        if ( lArea.rotation == 0 )               backFaceIndex = 5;
-        if ( lArea.rotation == Math.PI / 2 )     backFaceIndex = 0;
-        if ( lArea.rotation == Math.PI )         backFaceIndex = 4;
-        if ( lArea.rotation == 3 * Math.PI / 2 ) backFaceIndex = 1;
+        if ( landable.dim.rotation == 0 )               backFaceIndex = 5;
+        if ( landable.dim.rotation == Math.PI / 2 )     backFaceIndex = 0;
+        if ( landable.dim.rotation == Math.PI )         backFaceIndex = 4;
+        if ( landable.dim.rotation == 3 * Math.PI / 2 ) backFaceIndex = 1;
 
-        if (board.landableAreas[i] instanceof Street)
+        if (landable instanceof Street)
             materials[ backFaceIndex ] = backFaceMaterial;
 
         // 0 - 6
@@ -515,16 +499,17 @@ function setupBoard () {
         // 2 - 5
         // 3 - 2
 
-        geometry = new THREE.BoxGeometry( lArea.width, height, lArea.height );
+        geometry = new THREE.BoxGeometry( landable.dim.width, height, landable.dim.height );
         mesh = new THREE.Mesh( geometry, new THREE.MeshFaceMaterial( materials ) );
-        // mesh.rotation.y = lArea.rotation;
-        mesh.position.set( lArea.xMid, height / 2, lArea.yMid);
+        mesh.position.set( landable.dim.xMid, height / 2, landable.dim.yMid);
 
-        mesh.gameRep = board.landableAreas[i];
+        mesh.gameRep = landable;
         objects.push( mesh );
         scene.add( mesh );
     }
 
+
+    // Set Token & Outline for each player
     for (var i = 0; i < board.players.length; i++) {
 
         //PLAYER SELECTION OUTLINES
@@ -543,9 +528,9 @@ function setupBoard () {
             color: 0xfafa00, shininess: 10 } );
         var tokenGeometry = new THREE.BoxGeometry( 100, 100, 100 );
         var tokenMesh = new THREE.Mesh( tokenGeometry, tokenMaterial );
-        tokenMesh.position.x = board.landableAreas[0].dimensions.xMid;
+        tokenMesh.position.x = board.landables[0].dim.xMid;
         tokenMesh.position.y = 50 + height;
-        tokenMesh.position.z = board.landableAreas[0].dimensions.yMid;
+        tokenMesh.position.z = board.landables[0].dim.yMid;
 
         tokenMesh.gameRep = board.players[i];
 
@@ -553,6 +538,19 @@ function setupBoard () {
         objects.push(tokenMesh );
         scene.add( tokenMesh );
     }
+
+
+    // PLANE GEOMETRY
+    var material = new THREE.MeshPhongMaterial( { color: 0x00aaff } );
+    var geometry = new THREE.PlaneBufferGeometry( boardDim, boardDim );
+
+    var mesh = new THREE.Mesh( geometry, material );
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.position.x = boardDim / 2;
+    mesh.position.z = boardDim / 2;
+    // scene.add( mesh );
+    // objects.push( mesh );
+
 
     // END TURN BUTTON
     var turnGeometry = new THREE.CylinderGeometry( 100, 100, 100 );
@@ -607,6 +605,8 @@ function initGameView () {
     renderer.shadowMapSoft = true;
     renderer.setClearColor( 0x535353, 1 );
 
+    THREEx.WindowResize(renderer, camera);
+
     webglcanvas = document.getElementById( 'gameView' );
     webglcanvas.appendChild( renderer.domElement );
     
@@ -629,7 +629,7 @@ function initGameView () {
     setupBoard();
     startNextPlayerTurn();
 
-    // UI.auction( board.landableAreas[1] );
+    // UI.auction( board.landables[1] );
 }
 
 var eventListeners = {

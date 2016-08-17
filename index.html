@@ -6,6 +6,7 @@
         <script src="libs/three.min.js"></script>
         <script src="libs/XML-to-JSON.js"></script>
         <script src="libs/OrbitControls.js"></script>
+        <script src="libs/THREEx.WindowResize.js"></script>
 
         <!-- objects -->
         <script src="js/Bank.js"></script>
@@ -53,6 +54,14 @@
                 height: 500;
                 z-index: 1001;
             }
+
+
+            #ui-property-options button {
+                width: 100;
+                padding: 10px;
+                border: solid 1px #fff;
+            }
+
 
             #ui-modal-wrapper {
                 display: none;
@@ -253,8 +262,7 @@
 
         <div id="ui-modal-wrapper">
             <div id="ui-auction-window">
-                <div id="ui-auction-property-info">
-                </div>
+                <div id="ui-auction-property-info"></div>
                 <div id="ui-auction-bid-info">
                     <h1></h1>
                     <div id="ui-auction-bid-time"></div>
@@ -264,11 +272,14 @@
                 <div id="ui-auction-bid-control">
                     <input type="text" name="bid-amount" size="4">
                     <!-- TODO - need button id ? -->
-                    <button id="bid-submit"> Bid </button>
+                    <button> Bid </button>
                 </div>
             </div>
+
+
             <div id="ui-property-options">
-                <button> Ok </button>
+                <div id="ui-property-info"></div>
+                <div id="ui-property-option-buttons"></div>
             </div>
         </div>
 

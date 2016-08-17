@@ -1,13 +1,13 @@
 function Board() {
     this.players = [];
-    this.landableAreas = [];
+    this.landables = [];
     this.turn = 0;
     this.die;
     new Bank();
 }
 
 Board.prototype.addLandableArea = function (landableArea) {
-    this.landableAreas.push(landableArea);
+    this.landables.push(landableArea);
 }
 
 Board.prototype.addPlayer = function (player) {
@@ -30,9 +30,9 @@ Board.prototype.playerTurn = function () {
     this.turn++;
     var currentPlayer = this.players[ this.turn % this.players.length ];
 
-    var newPos = (currentPlayer.pos + moveAmount) % this.landableAreas.length;
+    var newPos = (currentPlayer.pos + moveAmount) % this.landables.length;
     currentPlayer.pos = newPos;
-    this.landableAreas[newPos].land( currentPlayer );
+    this.landables[newPos].land( currentPlayer );
 
 
     console.log(this.players)
@@ -47,5 +47,5 @@ Board.prototype.rollDie = function () {
 }
 
 Board.prototype.getLandableAreaCount = function () {
-    return this.landableAreas.length;
+    return this.landables.length;
 }

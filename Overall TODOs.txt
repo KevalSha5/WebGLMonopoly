@@ -1,4 +1,4 @@
-• Add UI Property Options
+• Add UI Property Options -- In Progress
 • Floss code in Gameview.js to make it more succinent
 • Add animations for rolling a Dice (# of dies should be modular)
 • Add hotel / house 3d Objects

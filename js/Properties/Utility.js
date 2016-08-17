@@ -14,7 +14,7 @@ Utility.prototype.payRent = function (player) {
 
 	var utilitiesOwned = 0;
 
-	for (var i = 0; i < board.landableAreas.length; i++) {
+	for (var i = 0; i < board.landables.length; i++) {
 
 		var genericProperty = board.landableAreas[i];
 
